@@ -1,0 +1,72 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;705;800&family=JetBrains+Mono:wght@400;500;700&family=Open+Dyslexic&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+  /* City of Cape Town primary brand palette — per Brand Guidelines 2014 */
+  --color-coct-blue: #006173; /* Earthy Blue (Pantone 7470) — text & interactive */
+  --color-coct-navy: #005870; /* Earthy Blue darker — page backgrounds */
+  --color-coct-yellow: #fdb813; /* Brand Yellow (Pantone 130) — primary highlights */
+  --color-coct-magenta: #cc0066; /* Magenta (Pantone 214) */
+  --color-coct-green: #479a3b; /* Earthy Green accent */
+  --color-coct-lime: #bacc00; /* Logo Lime (Pantone 382, RGB 186/204/0) */
+}
+
+@layer utilities {
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider shadow-xs;
+  }
+  .badge-indigo {
+    @apply bg-coct-blue/10 text-coct-blue border border-coct-blue/20;
+  }
+  .badge-emerald {
+    @apply bg-coct-green/10 text-coct-green border border-coct-green/20;
+  }
+  .badge-amber {
+    @apply bg-coct-yellow/10 text-amber-900 border border-coct-yellow/20;
+  }
+  .badge-red {
+    @apply bg-coct-magenta/10 text-coct-magenta border border-coct-magenta/20;
+  }
+
+  /* Accessibility Mode Classes */
+  .contrast-high {
+    background-color: #0d1117 !important;
+    color: #ffffff !important;
+  }
+  .contrast-high-card {
+    background-color: #161b22 !important;
+    color: #ffffff !important;
+    border-color: #fdb813 !important;
+    border-width: 2px !important;
+    box-shadow: none !important;
+  }
+  .contrast-high-text-bright {
+    color: #fdb813 !important;
+  }
+  .contrast-high-btn-primary {
+    background-color: #fdb813 !important;
+    color: #000000 !important;
+    font-weight: 900 !important;
+    border: 2px solid #ffffff !important;
+  }
+  .contrast-high-btn-secondary {
+    background-color: #0d1117 !important;
+    color: #ffffff !important;
+    border: 2px solid #ffffff !important;
+  }
+  .contrast-high-input {
+    background-color: #000000 !important;
+    color: #ffffff !important;
+    border: 2px solid #fdb813 !important;
+  }
+}
+
+#accessibilityBanner {
+  background-color: var(--color-coct-magenta);
+}
+
+#captionBanner {
+  background-color: var(--color-white) !important;
+}

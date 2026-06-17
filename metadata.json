@@ -1,0 +1,6 @@
+{
+  "name": "Citizen Job Placement Portal",
+  "description": "A dual-portal system where citizens can login, browse and apply for jobs, submit documents, and track interviews or placements; and administrators can update job listings, view users, and manage requests.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
