@@ -615,7 +615,7 @@ export default function RoleSelector({
                     className={`pt-2 border-t -mx-6 px-6 py-4 space-y-3 ${isHigh ? "border-slate-800 bg-slate-900/40" : "border-slate-100 bg-slate-50"}`}
                   >
                     <span
-                      className={`block text-[10px] font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
+                      className={`block text-[10px] font-extrabold uppercase tracking-wider items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
                     >
                       <HelpCircle
                         size={14}
@@ -1049,7 +1049,7 @@ export default function RoleSelector({
                 Access Admin Control
               </button>
 
-              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50 -mx-6 -mb-8 px-6 py-4 rounded-b-[32px]">
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50 -mx-6 -mb-8 px-6 py-4 rounded-b-4xl">
                 <span className="font-bold text-slate-500">
                   Authorized Personnel Only
                 </span>

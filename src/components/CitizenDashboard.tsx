@@ -578,7 +578,7 @@ SKILLS:
           <div className="space-y-6" id="citizen-vacancies-tab">
             
             {/* Search filter block */}
-            <div className="flex flex-col md:flex-row gap-4 bg-white p-5 rounded-[24px] border border-slate-150 shadow-xs">
+            <div className="flex flex-col md:flex-row gap-4 bg-white p-5 rounded-3xl border border-slate-150 shadow-xs">
               <div className="flex-1 relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
                   <Search size={18} />
@@ -616,7 +616,7 @@ SKILLS:
             {/* Grid of opportunities */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="citizen-listings-grid">
               {filteredJobs.length === 0 ? (
-                <div className="col-span-full bg-white text-center py-16 px-6 rounded-[32px] border border-slate-200 text-slate-400">
+                <div className="col-span-full bg-white text-center py-16 px-6 rounded-4xl border border-slate-200 text-slate-400">
                   <Briefcase size={44} className="mx-auto text-slate-300 mb-3" />
                   <p className="font-semibold text-slate-700">No Placement Openings Found</p>
                   <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">Try adjusting your filters or search keys above.</p>
@@ -627,7 +627,7 @@ SKILLS:
                   return (
                     <div 
                       key={job.id} 
-                      className="bg-white rounded-[32px] border-2 border-transparent hover:border-indigo-400 p-5.5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
+                      className="bg-white rounded-4xl border-2 border-transparent hover:border-indigo-400 p-5.5 shadow-xs hover:shadow-md transition-all flex flex-col justify-between"
                     >
                       <div>
                         <div className="flex justify-between items-center">
@@ -704,7 +704,7 @@ SKILLS:
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-[32px] border border-slate-200 shadow-2xl overflow-hidden max-w-2xl w-full"
+                    className="bg-white rounded-4xl border border-slate-200 shadow-2xl overflow-hidden max-w-2xl w-full"
                     id="job-info-wizard-modal"
                   >
                     {/* Header */}
@@ -749,7 +749,7 @@ SKILLS:
                      ) : null}
 
                     {/* Content Area */}
-                    <div className="p-6 max-h-[500px] overflow-y-auto space-y-6">
+                    <div className="p-6 max-h-125 overflow-y-auto space-y-6">
                       
                       {!showApplyModal ? (
                         /* ================ Subview A: Job details ================ */
@@ -825,7 +825,7 @@ SKILLS:
                               </p>
 
                               {/* CV AUTOMATION MATCH SCAN-AND-PARSE TOOL */}
-                              <div className="bg-indigo-50/50 border-2 border-indigo-150 rounded-[24px] p-4.5 space-y-3">
+                              <div className="bg-indigo-50/50 border-2 border-indigo-150 rounded-3xl p-4.5 space-y-3">
                                 <div className="flex justify-between items-center">
                                   <div className="flex items-center space-x-2">
                                     <span className="p-1.5 bg-indigo-600 text-white rounded-lg">
@@ -1269,7 +1269,7 @@ SKILLS:
                                 <div className="space-y-4 relative pl-3.5 border-l-2 border-indigo-200">
                                   {/* Day 5 */}
                                   <div className="relative">
-                                    <span className="absolute -left-[20.5px] top-0.5 h-3 w-3 bg-indigo-600 rounded-full border-2 border-white" />
+                                    <span className="absolute left-[-20.5px] top-0.5 h-3 w-3 bg-indigo-600 rounded-full border-2 border-white" />
                                     <div className="space-y-0.5">
                                       <div className="flex justify-between items-center">
                                         <span className="font-black text-indigo-950 text-xs">Checkpoint 1: Home Affairs ID Cleanliness Inspection</span>
@@ -1283,7 +1283,7 @@ SKILLS:
 
                                   {/* Day 12 */}
                                   <div className="relative">
-                                    <span className="absolute -left-[20.5px] top-0.5 h-3 w-3 bg-amber-500 rounded-full border-2 border-white" />
+                                    <span className="absolute left-[-20.5px] top-0.5 h-3 w-3 bg-amber-500 rounded-full border-2 border-white" />
                                     <div className="space-y-0.5">
                                       <div className="flex justify-between items-center">
                                         <span className="font-black text-amber-950 text-xs">Checkpoint 2: Police Vetting & Security Clearances</span>
@@ -1297,7 +1297,7 @@ SKILLS:
 
                                   {/* Day 20 */}
                                   <div className="relative">
-                                    <span className="absolute -left-[20.5px] top-0.5 h-3 w-3 bg-emerald-500 rounded-full border-2 border-white" />
+                                    <span className="absolute left-[-20.5px] top-0.5 h-3 w-3 bg-emerald-500 rounded-full border-2 border-white" />
                                     <div className="space-y-0.5">
                                       <div className="flex justify-between items-center">
                                         <span className="font-black text-emerald-950 text-xs">Checkpoint 3: Local Municipal Interview Scheduling</span>
@@ -1361,7 +1361,7 @@ SKILLS:
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               
               {/* Left column: submissions history */}
-              <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-150 p-4 space-y-3.5 max-h-[500px] overflow-y-auto">
+              <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-150 p-4 space-y-3.5 max-h-125 overflow-y-auto">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">My Submissions Portal</span>
                 
                 {myApplications.length === 0 ? (
@@ -1442,7 +1442,7 @@ SKILLS:
                               <div className="h-6 w-6 bg-emerald-500 rounded-full flex items-center justify-center text-white shrink-0">
                                 <Check size={13} />
                               </div>
-                              <div className="w-0.5 bg-emerald-500 flex-1 my-1 min-h-[20px]" />
+                              <div className="w-0.5 bg-emerald-500 flex-1 my-1 min-h-5" />
                             </div>
                             <div className="text-xs pb-1.5">
                               <span className="font-bold text-slate-900 block text-sm">Application Clearances Registered</span>
@@ -1466,7 +1466,7 @@ SKILLS:
                                   <span>2</span>
                                 )}
                               </div>
-                              <div className={`w-0.5 flex-1 my-1 min-h-[20px] ${
+                              <div className={`w-0.5 flex-1 my-1 min-h-5 ${
                                 ['interview_scheduled', 'placed', 'rejected'].includes(app.status) ? 'bg-emerald-500' : 'bg-slate-200'
                               }`} />
                             </div>
@@ -1496,7 +1496,7 @@ SKILLS:
                                   <span>3</span>
                                 )}
                               </div>
-                              <div className={`w-0.5 flex-1 my-1 min-h-[20px] ${
+                              <div className={`w-0.5 flex-1 my-1 min-h-5 ${
                                 ['placed'].includes(app.status) ? 'bg-emerald-500' : 'bg-slate-200'
                               }`} />
                             </div>
@@ -1540,7 +1540,7 @@ SKILLS:
                               <span className="font-bold text-slate-900 block text-sm">Placement Confirmed & Digital letter</span>
                               
                               {app.status === 'placed' && app.placementDetails ? (
-                                <div className="mt-3.5 bg-gradient-to-br from-amber-50 to-emerald-50 border border-emerald-150 p-5 rounded-2xl space-y-4">
+                                <div className="mt-3.5 bg-linear-to-br from-amber-50 to-emerald-50 border border-emerald-150 p-5 rounded-2xl space-y-4">
                                   <div className="flex items-center space-x-1.5 font-black text-emerald-800 uppercase tracking-widest text-[10px]">
                                     <Award size={14} className="text-amber-500" />
                                     <span>Official Civil Placement Clearance</span>
