@@ -8,7 +8,6 @@ import {
   Trash,
   Users,
   Search,
-  DollarSign,
   MapPin,
   Clock,
   Filter,
@@ -471,7 +470,7 @@ export default function AdminDashboard({
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* System Stats Row - Vibrant Design with rounded-4xl bento shapes and bright gradients */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
-          <div className="bg-indigo-600 text-white p-6 rounded-4xl shadow-xl shadow-indigo-100 flex items-center justify-between">
+          <div className="bg-indigo-600 text-white p-6 rounded-4xl  shadow-indigo-100 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-indigo-100">
                 Active Jobs
@@ -483,7 +482,7 @@ export default function AdminDashboard({
             </div>
           </div>
 
-          <div className="bg-teal-500 text-white p-6 rounded-4xl shadow-xl shadow-teal-55 flex items-center justify-between">
+          <div className="bg-teal-500 text-white p-6 rounded-4xl  shadow-teal-55 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-teal-55">
                 Registered Users
@@ -495,7 +494,7 @@ export default function AdminDashboard({
             </div>
           </div>
 
-          <div className="bg-amber-400 text-slate-950 p-6 rounded-4xl shadow-xl shadow-amber-50 flex items-center justify-between">
+          <div className="bg-amber-400 text-slate-950 p-6 rounded-4xl  shadow-amber-50 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-900/60">
                 Submissions
@@ -509,7 +508,7 @@ export default function AdminDashboard({
             </div>
           </div>
 
-          <div className="bg-rose-500 text-white p-6 rounded-4xl shadow-xl shadow-rose-100 flex items-center justify-between">
+          <div className="bg-rose-500 text-white p-6 rounded-4xl  shadow-rose-100 flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-rose-100">
                 Placements
@@ -922,10 +921,10 @@ export default function AdminDashboard({
                           {job.location}
                         </span>
                         <span className="flex items-center text-slate-500">
-                          <DollarSign
+                          {/* <DollarSign
                             size={13}
                             className="mr-1 text-emerald-600"
-                          />
+                          /> */}
                           {job.salaryRange}
                         </span>
                         <span className="flex items-center bg-indigo-50 text-indigo-700 px-2 py-0.5 rounded-md text-[11px] font-bold">
@@ -980,7 +979,7 @@ export default function AdminDashboard({
             </div>
 
             {/* List and Grid */}
-            <div className="bg-white rounded-4xl border border-slate-150 shadow-xl shadow-slate-100 overflow-hidden">
+            <div className="bg-white rounded-4xl border border-slate-150  shadow-slate-100 overflow-hidden">
               <div className="overflow-x-auto">
                 <table
                   className="min-w-full divide-y divide-slate-150"
@@ -1720,7 +1719,7 @@ export default function AdminDashboard({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-2xl shadow-xl max-w-md w-full overflow-hidden border border-slate-200"
+                    className="bg-white rounded-2xl  max-w-md w-full overflow-hidden border border-slate-200"
                     id="interview-scheduling-modal"
                   >
                     <div className="bg-slate-900 text-white p-5 flex justify-between items-center">
@@ -1819,7 +1818,7 @@ export default function AdminDashboard({
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     exit={{ opacity: 0, scale: 0.95 }}
-                    className="bg-white rounded-2xl shadow-xl max-w-lg w-full overflow-hidden border border-slate-200"
+                    className="bg-white rounded-2xl  max-w-lg w-full overflow-hidden border border-slate-200"
                     id="placement-finalization-modal"
                   >
                     <div className="bg-emerald-950 text-white p-5 flex justify-between items-center border-b border-emerald-900">
