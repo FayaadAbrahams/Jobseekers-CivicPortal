@@ -32,6 +32,8 @@ export default function AdminDashboard({
   setAllInterviews,
   contrast = 'city'
 }: AdminDashboardProps) {
+  const isHigh = contrast === 'high';
+
   const [activeTab, setActiveTab] = useState<'jobs' | 'citizens' | 'applications'>('jobs');
   
   // Job Form States
@@ -338,15 +340,15 @@ export default function AdminDashboard({
   });
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
-      
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${isHigh ? 'bg-black text-white' : 'bg-slate-100 text-slate-800'}`}>
+
       {/* Red Administrative Active Ribbon */}
-      <div className="bg-[#EF4444] text-white py-1 text-center font-bold font-mono text-[10px] tracking-widest uppercase z-50 shadow-xs">
+      <div className={`py-1 text-center font-bold font-mono text-[10px] tracking-widest uppercase z-50 shadow-xs ${isHigh ? 'bg-yellow-400 text-black' : 'bg-[#EF4444] text-white'}`}>
         ADMIN CONSOLE ACTIVE • JOB POSTING ENABLED
       </div>
 
       {/* Admin Header Station */}
-      <header className="bg-coct-navy text-white shadow-md border-b border-slate-800">
+      <header className={`text-white shadow-md border-b ${isHigh ? 'bg-black border-yellow-400' : 'bg-coct-navy border-slate-800'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           <div className="flex items-center space-x-3.5">
             <div className="bg-indigo-600 p-2.5 rounded-xl text-white shadow-lg shadow-indigo-900/45">
@@ -423,14 +425,14 @@ export default function AdminDashboard({
         </div>
 
         {/* Dashboard Menu Tabs */}
-        <div className="flex border-b border-slate-200 mb-8 overflow-x-auto space-x-8">
+        <div className={`flex border-b mb-8 overflow-x-auto space-x-8 ${isHigh ? 'border-yellow-400' : 'border-slate-200'}`}>
           <button
             id="tab-btn-jobs"
             onClick={() => setActiveTab('jobs')}
             className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
               activeTab === 'jobs'
-                ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? isHigh ? 'border-yellow-400 text-yellow-400 font-extrabold' : 'border-indigo-600 text-indigo-600 font-extrabold'
+                : isHigh ? 'border-transparent text-slate-400 hover:text-white' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <Briefcase size={18} />
@@ -441,8 +443,8 @@ export default function AdminDashboard({
             onClick={() => setActiveTab('citizens')}
             className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
               activeTab === 'citizens'
-                ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? isHigh ? 'border-yellow-400 text-yellow-400 font-extrabold' : 'border-indigo-600 text-indigo-600 font-extrabold'
+                : isHigh ? 'border-transparent text-slate-400 hover:text-white' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <Users size={18} />
@@ -453,8 +455,8 @@ export default function AdminDashboard({
             onClick={() => setActiveTab('applications')}
             className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
               activeTab === 'applications'
-                ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-800'
+                ? isHigh ? 'border-yellow-400 text-yellow-400 font-extrabold' : 'border-indigo-600 text-indigo-600 font-extrabold'
+                : isHigh ? 'border-transparent text-slate-400 hover:text-white' : 'border-transparent text-slate-500 hover:text-slate-800'
             }`}
           >
             <Inbox size={18} />

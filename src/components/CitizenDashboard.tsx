@@ -35,6 +35,8 @@ export default function CitizenDashboard({
   allCitizens,
   contrast = 'city'
 }: CitizenDashboardProps) {
+  const isHigh = contrast === 'high';
+
   const [activeTab, setActiveTab] = useState<'vacancies' | 'trackers' | 'documents' | 'notifications'>('vacancies');
 
   // Query & filters for jobs
@@ -479,10 +481,10 @@ SKILLS:
   });
 
   return (
-    <div className="min-h-screen bg-slate-100 flex flex-col font-sans text-slate-800">
-      
+    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-200 ${isHigh ? 'bg-black text-white' : 'bg-slate-100 text-slate-800'}`}>
+
       {/* Citizen Header bar */}
-      <header className="bg-coct-navy text-white shadow-md border-b border-slate-800">
+      <header className={`text-white shadow-md border-b ${isHigh ? 'bg-black border-yellow-400' : 'bg-coct-navy border-slate-800'}`}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5 flex flex-col sm:flex-row justify-between items-center gap-4">
           <div className="flex items-center space-x-3.5">
             <div className="bg-indigo-600 p-2.5 rounded-xl border border-indigo-500 shadow-md shadow-indigo-900/40">
@@ -525,16 +527,16 @@ SKILLS:
 
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        
+
         {/* Navigation Tabs bar */}
-        <div className="flex border-b border-slate-200 mb-8 overflow-x-auto space-x-8">
+        <div className={`flex border-b mb-8 overflow-x-auto space-x-8 ${isHigh ? 'border-yellow-400' : 'border-slate-200'}`}>
           <button
             id="cit-tab-btn-vacancies"
             onClick={() => setActiveTab('vacancies')}
             className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
               activeTab === 'vacancies'
-                ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-850'
+                ? isHigh ? 'border-yellow-400 text-yellow-400 font-extrabold' : 'border-indigo-600 text-indigo-600 font-extrabold'
+                : isHigh ? 'border-transparent text-slate-400 hover:text-white' : 'border-transparent text-slate-500 hover:text-slate-850'
             }`}
           >
             <Briefcase size={18} />
@@ -545,14 +547,14 @@ SKILLS:
             onClick={() => setActiveTab('trackers')}
             className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all relative ${
               activeTab === 'trackers'
-                ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-850'
+                ? isHigh ? 'border-yellow-400 text-yellow-400 font-extrabold' : 'border-indigo-600 text-indigo-600 font-extrabold'
+                : isHigh ? 'border-transparent text-slate-400 hover:text-white' : 'border-transparent text-slate-500 hover:text-slate-850'
             }`}
           >
             <Clock size={18} />
             <span>My Application Trackers</span>
             {myApplications.length > 0 && (
-              <span className="ml-1.5 bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full text-[10px] font-bold">
+              <span className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isHigh ? 'bg-yellow-400 text-black' : 'bg-indigo-100 text-indigo-800'}`}>
                 {myApplications.length}
               </span>
             )}
@@ -562,8 +564,8 @@ SKILLS:
             onClick={() => setActiveTab('documents')}
             className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
               activeTab === 'documents'
-                ? 'border-indigo-600 text-indigo-600 font-extrabold'
-                : 'border-transparent text-slate-500 hover:text-slate-850'
+                ? isHigh ? 'border-yellow-400 text-yellow-400 font-extrabold' : 'border-indigo-600 text-indigo-600 font-extrabold'
+                : isHigh ? 'border-transparent text-slate-400 hover:text-white' : 'border-transparent text-slate-500 hover:text-slate-850'
             }`}
           >
             <FileText size={18} />

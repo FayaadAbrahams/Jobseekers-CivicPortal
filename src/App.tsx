@@ -11,6 +11,7 @@ import RoleSelector from "./components/RoleSelector";
 import AdminDashboard from "./components/AdminDashboard";
 import CitizenDashboard from "./components/CitizenDashboard";
 import AccessibilityBar from "./components/AccessibilityBar";
+import WhatsAppChatbot from "./components/WhatsAppChatbot";
 import { motion, AnimatePresence } from "motion/react";
 
 export default function App() {
@@ -181,6 +182,8 @@ export default function App() {
         transcript={transcript}
         setTranscript={setTranscript}
       />
+
+      {!currentUser && <WhatsAppChatbot contrast={contrast} />}
 
       <AnimatePresence mode="wait">
         {!currentUser ? (
