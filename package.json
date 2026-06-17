@@ -1,5 +1,6 @@
 {
-  "name": "react-example",
+  "homepage": "https://fayaadabrahams.github.io/Jobseekers-CivicPortal/",
+  "name": "jobseekers-civic-portal",
   "private": true,
   "version": "0.0.0",
   "type": "module",
