@@ -42,6 +42,11 @@ import {
   Interview,
   SystemNotification,
 } from "../types";
+import * as pdfjsLib from "pdfjs-dist";
+pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+  "pdfjs-dist/build/pdf.worker.min.mjs",
+  import.meta.url,
+).href;
 
 interface CitizenDashboardProps {
   citizen: Citizen;
@@ -434,18 +439,33 @@ SKILLS:
     setCameraDocType(null);
   };
 
-  // Read a plain-text file into the CV scanner textarea
-  const handleCvFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Read a plain-text or PDF file into the CV scanner textarea
+  const handleCvFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.type === "text/plain") {
       const reader = new FileReader();
       reader.onload = (ev) => setCvText(ev.target?.result as string);
       reader.readAsText(file);
+    } else if (file.type === "application/pdf") {
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+        let fullText = "";
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const pageText = content.items
+            .map((item) => ("str" in item ? item.str : ""))
+            .join(" ");
+          fullText += pageText + "\n";
+        }
+        setCvText(fullText.trim());
+      } catch {
+        alert("Could not extract text from this PDF. Please paste your CV text manually.");
+      }
     } else {
-      alert(
-        "Only .txt files can be read automatically. For PDF or image CVs, please paste your text into the field below.",
-      );
+      alert("Please upload a .txt or .pdf file.");
     }
     e.target.value = "";
   };
@@ -1159,10 +1179,10 @@ SKILLS:
                                         </label>
                                         <label className="text-[9px] font-bold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 transition-all">
                                           <UploadCloud size={10} />
-                                          Upload .txt File
+                                          Upload .txt / PDF
                                           <input
                                             type="file"
-                                            accept=".txt"
+                                            accept=".txt,.pdf"
                                             className="hidden"
                                             onChange={handleCvFileUpload}
                                           />
@@ -1175,7 +1195,7 @@ SKILLS:
                                         onChange={(e) =>
                                           setCvText(e.target.value)
                                         }
-                                        placeholder="Paste your CV text here, or upload a .txt file above..."
+                                        placeholder="Paste your CV text here, or upload a .txt or PDF file above..."
                                         className="w-full text-slate-900 font-semibold bg-white text-[11px] border border-slate-200 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 font-mono focus:outline-hidden"
                                       />
                                     </div>
@@ -1417,16 +1437,20 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <button
-                                        type="button"
-                                        disabled={isUploading !== null}
-                                        onClick={() => simulateUpload("id")}
-                                        className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-all"
-                                      >
-                                        {isUploading === "id"
-                                          ? "Processing..."
-                                          : "Upload Scan"}
-                                      </button>
+                                      <label className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
+                                        {isUploading === "id" ? "Processing..." : "Upload File"}
+                                        <input
+                                          type="file"
+                                          accept=".pdf,.jpg,.jpeg,.png"
+                                          className="hidden"
+                                          disabled={isUploading !== null}
+                                          onChange={(e) => {
+                                            const f = e.target.files?.[0];
+                                            if (f) simulateUpload("id", f.name);
+                                            e.target.value = "";
+                                          }}
+                                        />
+                                      </label>
                                     )}
                                   </div>
                                 </div>
@@ -1448,16 +1472,20 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <button
-                                        type="button"
-                                        disabled={isUploading !== null}
-                                        onClick={() => simulateUpload("cv")}
-                                        className="px-3 py-1.5 bg-blue-55 text-blue-700 rounded-lg font-bold hover:bg-blue-100 transition-all"
-                                      >
-                                        {isUploading === "cv"
-                                          ? "Processing..."
-                                          : "Upload Scan"}
-                                      </button>
+                                      <label className={`px-3 py-1.5 bg-blue-55 text-blue-700 rounded-lg font-bold hover:bg-blue-100 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
+                                        {isUploading === "cv" ? "Processing..." : "Upload File"}
+                                        <input
+                                          type="file"
+                                          accept=".pdf,.jpg,.jpeg,.png"
+                                          className="hidden"
+                                          disabled={isUploading !== null}
+                                          onChange={(e) => {
+                                            const f = e.target.files?.[0];
+                                            if (f) simulateUpload("cv", f.name);
+                                            e.target.value = "";
+                                          }}
+                                        />
+                                      </label>
                                     )}
                                   </div>
                                 </div>
@@ -1478,18 +1506,20 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <button
-                                        type="button"
-                                        disabled={isUploading !== null}
-                                        onClick={() =>
-                                          simulateUpload("qualifications")
-                                        }
-                                        className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all"
-                                      >
-                                        {isUploading === "qualifications"
-                                          ? "Processing..."
-                                          : "Upload Scan"}
-                                      </button>
+                                      <label className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
+                                        {isUploading === "qualifications" ? "Processing..." : "Upload File"}
+                                        <input
+                                          type="file"
+                                          accept=".pdf,.jpg,.jpeg,.png"
+                                          className="hidden"
+                                          disabled={isUploading !== null}
+                                          onChange={(e) => {
+                                            const f = e.target.files?.[0];
+                                            if (f) simulateUpload("qualifications", f.name);
+                                            e.target.value = "";
+                                          }}
+                                        />
+                                      </label>
                                     )}
                                   </div>
                                 </div>
@@ -1511,18 +1541,20 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <button
-                                        type="button"
-                                        disabled={isUploading !== null}
-                                        onClick={() =>
-                                          simulateUpload("address")
-                                        }
-                                        className="px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all"
-                                      >
-                                        {isUploading === "address"
-                                          ? "Processing..."
-                                          : "Upload Scan"}
-                                      </button>
+                                      <label className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
+                                        {isUploading === "address" ? "Processing..." : "Upload File"}
+                                        <input
+                                          type="file"
+                                          accept=".pdf,.jpg,.jpeg,.png"
+                                          className="hidden"
+                                          disabled={isUploading !== null}
+                                          onChange={(e) => {
+                                            const f = e.target.files?.[0];
+                                            if (f) simulateUpload("address", f.name);
+                                            e.target.value = "";
+                                          }}
+                                        />
+                                      </label>
                                     )}
                                   </div>
                                 </div>
@@ -2187,54 +2219,60 @@ SKILLS:
                             </p>
                             <div className="flex flex-wrap gap-2 pt-1">
                               {!app.documents.idCopy && (
-                                <button
-                                  id={`supplemental-upload-id`}
-                                  onClick={() =>
-                                    handleUploadMissingDoc(app.id, "idCopy")
-                                  }
-                                  className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg border border-amber-200"
-                                >
+                                <label className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-900 font-bold rounded-lg border border-amber-200 cursor-pointer">
                                   Upload ID Document Card
-                                </button>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "idCopy");
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
                               )}
                               {!app.documents.cv && (
-                                <button
-                                  id={`supplemental-upload-cv`}
-                                  onClick={() =>
-                                    handleUploadMissingDoc(app.id, "cv")
-                                  }
-                                  className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-905 font-bold rounded-lg border border-amber-200"
-                                >
+                                <label className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-905 font-bold rounded-lg border border-amber-200 cursor-pointer">
                                   Upload CV Work History
-                                </button>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "cv");
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
                               )}
                               {!app.documents.qualifications && (
-                                <button
-                                  id={`supplemental-upload-qualifications`}
-                                  onClick={() =>
-                                    handleUploadMissingDoc(
-                                      app.id,
-                                      "qualifications",
-                                    )
-                                  }
-                                  className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-905 font-bold rounded-lg border border-amber-200"
-                                >
+                                <label className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-905 font-bold rounded-lg border border-amber-200 cursor-pointer">
                                   Upload Academic Diploma Scan
-                                </button>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "qualifications");
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
                               )}
                               {!app.documents.proofOfAddress && (
-                                <button
-                                  id={`supplemental-upload-address`}
-                                  onClick={() =>
-                                    handleUploadMissingDoc(
-                                      app.id,
-                                      "proofOfAddress",
-                                    )
-                                  }
-                                  className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-905 font-bold rounded-lg border border-amber-200"
-                                >
+                                <label className="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-905 font-bold rounded-lg border border-amber-200 cursor-pointer">
                                   Upload Residential Proof
-                                </button>
+                                  <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    className="hidden"
+                                    onChange={(e) => {
+                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "proofOfAddress");
+                                      e.target.value = "";
+                                    }}
+                                  />
+                                </label>
                               )}
                             </div>
                           </div>
