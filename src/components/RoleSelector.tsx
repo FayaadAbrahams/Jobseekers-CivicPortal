@@ -16,6 +16,8 @@ import {
   Lock,
   Building2,
   LockKeyhole,
+  Mail,
+  Phone,
 } from "lucide-react";
 import { Citizen } from "../types";
 
@@ -39,6 +41,8 @@ export default function RoleSelector({
   // Registration flow state variables
   const [fullName, setFullName] = useState("");
   const [regPassword, setRegPassword] = useState("");
+  const [regEmail, setRegEmail] = useState("");
+  const [regPhone, setRegPhone] = useState("");
   const [regQ1, setRegQ1] = useState("");
   const [regQ2, setRegQ2] = useState("");
   const [regQ3, setRegQ3] = useState("");
@@ -135,6 +139,13 @@ export default function RoleSelector({
       return;
     }
 
+    // if (!regEmail.trim() && !regPhone.trim()) {
+    //   setLoginError(
+    //     "At least one communication method is required — provide an email address or cellphone number.",
+    //   );
+    //   return;
+    // }
+
     if (trimmedId.length < 6 || trimmedId.length > 15) {
       setLoginError("ID Number must be between 6 and 15 characters.");
       return;
@@ -152,8 +163,8 @@ export default function RoleSelector({
       idNumber: trimmedId,
       registeredDate: new Date().toISOString().split("T")[0],
       skills: [],
-      phone: "",
-      email: "",
+      phone: regPhone.trim(),
+      email: regEmail.trim(),
       password: regPassword,
       recoveryAnswers: {
         q1: regQ1.trim(),
@@ -556,7 +567,7 @@ export default function RoleSelector({
                   </div>
 
                   {loginError && (
-                    <div className="p-3 bg-amber-50 text-amber-850 text-[11px] rounded-xl border border-amber-150 flex items-center font-bold">
+                    <div className="p-3 bg-amber-50 text-black text-[11px] rounded-xl border border-amber-150 flex items-center font-bold">
                       <span>{loginError}</span>
                     </div>
                   )}
@@ -595,7 +606,7 @@ export default function RoleSelector({
                     <label
                       className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ${isHigh ? "text-coct-yellow" : "text-slate-600"}`}
                     >
-                      Create Vault Password
+                      Create Portal Password
                     </label>
                     <input
                       type="password"
@@ -611,6 +622,70 @@ export default function RoleSelector({
                     />
                   </div>
 
+                  {/* Communication Methods */}
+                  <div
+                    className={`pt-2 border-t -mx-6 px-6 py-4 space-y-3 ${isHigh ? "border-slate-800 bg-slate-900/40" : "border-slate-100 bg-slate-50"}`}
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`block text-[10px] font-extrabold uppercase tracking-wider ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
+                      >
+                        Step 2: Communication Methods
+                      </span>
+                    </div>
+                    <p
+                      className={`text-[10px] leading-normal ${isHigh ? "text-slate-300" : "text-slate-400"}`}
+                    >
+                      Provide an email address, a cellphone number, or both so
+                      we can reach you about your applications.
+                    </p>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 mb-1">
+                        Email Address
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Mail size={13} />
+                        </div>
+                        <input
+                          type="email"
+                          value={regEmail}
+                          onChange={(e) => setRegEmail(e.target.value)}
+                          placeholder="e.g. name@example.com"
+                          className={`block w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs transition-all ${
+                            isHigh
+                              ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow"
+                              : "border-slate-200 text-slate-900 bg-white focus:ring-1 focus:ring-coct-blue"
+                          }`}
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 mb-1">
+                        Cellphone Number
+                      </label>
+                      <div className="relative">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+                          <Phone size={13} />
+                        </div>
+                        <input
+                          type="tel"
+                          value={regPhone}
+                          onChange={(e) => setRegPhone(e.target.value)}
+                          placeholder="e.g. 082 123 4567"
+                          className={`block w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs transition-all ${
+                            isHigh
+                              ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow"
+                              : "border-slate-200 text-slate-900 bg-white focus:ring-1 focus:ring-coct-blue"
+                          }`}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Security Questions */}
                   <div
                     className={`pt-2 border-t -mx-6 px-6 py-4 space-y-3 ${isHigh ? "border-slate-800 bg-slate-900/40" : "border-slate-100 bg-slate-50"}`}
                   >
@@ -623,7 +698,7 @@ export default function RoleSelector({
                           isHigh ? "text-coct-yellow" : "text-coct-blue"
                         }
                       />
-                      Step 2: Account Recovery Safety Settings
+                      Step 3: Account Recovery Safety Settings
                     </span>
                     <p
                       className={`text-[10px] leading-normal mb-1 ${isHigh ? "text-slate-300" : "text-slate-400"}`}
@@ -908,13 +983,13 @@ export default function RoleSelector({
                       Security Clearance Passed
                     </h3>
                     <p className="text-xs text-slate-400 mt-1">
-                      Specify a new secure vault password below.
+                      Specify a new secure portal password below.
                     </p>
                   </div>
 
                   <div>
                     <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-1.5">
-                      New Vault Password
+                      New Portal Password
                     </label>
                     <input
                       type="password"

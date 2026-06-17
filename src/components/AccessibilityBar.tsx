@@ -49,6 +49,8 @@ export default function AccessibilityBar({
       try {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
+        const voices = window.speechSynthesis.getVoices();
+        utterance.voice = voices[2];
         utterance.rate = 0.95;
         window.speechSynthesis.speak(utterance);
       } catch (err) {
@@ -174,7 +176,7 @@ export default function AccessibilityBar({
           {/* Brand Shield & Motto */}
           <div className="flex items-center space-x-3">
             <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center border border-white text-coct-blue shrink-0 font-black text-base shadow-sm">
-              <img src={coctLogo} alt="City of Cape Town Logo" />
+              <img src={coctLogo} alt="City of Cape Town Logo" sizes="xl" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">
@@ -269,7 +271,7 @@ export default function AccessibilityBar({
             >
               <Volume2 size={13} />
               <span>
-                {speechEnabled ? "🔈 Guidance Enabled" : "🔊 Auditory Guidance"}
+                {speechEnabled ? " Guidance Enabled" : "Auditory Guidance"}
               </span>
             </button>
 
