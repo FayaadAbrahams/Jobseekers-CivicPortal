@@ -172,11 +172,11 @@ export default function AccessibilityBar({
             : "text-coct-magenta border-white/10"
         }`}
       >
-        <div className=" heighmax-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-y-2">
+        <div className=" max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2.5 flex flex-wrap items-center justify-between gap-y-2">
           {/* Brand Shield & Motto */}
           <div className="flex items-center space-x-3">
-            <div className="h-8 w-8 rounded-full bg-white flex items-center justify-center border border-white text-coct-blue shrink-0 font-black text-base shadow-sm">
-              <img src={coctLogo} alt="City of Cape Town Logo" sizes="xl" />
+            <div className="h-20 w-20 rounded-full bg-white flex items-center justify-center border border-white text-coct-blue shrink-0 font-black text-base shadow-sm">
+              <img src={coctLogo} alt="City of Cape Town Logo" />
             </div>
             <div>
               <div className="flex items-center gap-1.5">

@@ -18,8 +18,11 @@ import {
   LockKeyhole,
   Mail,
   Phone,
+  PlayCircle,
+  X,
 } from "lucide-react";
 import { Citizen } from "../types";
+import introVid from "@/assets/vids/how-to-use.mp4";
 
 interface RoleSelectorProps {
   onLoginCitizen: (fullName: string, idNumber: string) => void;
@@ -33,6 +36,7 @@ export default function RoleSelector({
   contrast = "city",
 }: RoleSelectorProps) {
   const [activeTab, setActiveTab] = useState<"citizen" | "admin">("citizen");
+  const [showVideo, setShowVideo] = useState(false);
 
   // Login standard credential states
   const [idNumber, setIdNumber] = useState("");
@@ -336,7 +340,56 @@ export default function RoleSelector({
           Secure placement and development portal aligned with the Cape Town IDP
           (2022-2027) directives.
         </p>
+        <button
+          type="button"
+          onClick={() => setShowVideo(true)}
+          className={`mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+            isHigh
+              ? "bg-coct-yellow/10 text-coct-yellow border border-coct-yellow/40 hover:bg-coct-yellow/20"
+              : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+          }`}
+        >
+          <PlayCircle size={14} />
+          What is this portal for?
+        </button>
       </div>
+
+      {/* Video modal */}
+      <AnimatePresence>
+        {showVideo && (
+          <motion.div
+            key="video-modal"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm px-4"
+            onClick={() => setShowVideo(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="relative w-full max-w-3xl rounded-2xl overflow-hidden shadow-2xl bg-black"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <button
+                type="button"
+                onClick={() => setShowVideo(false)}
+                className="absolute top-3 right-3 z-10 bg-black/60 hover:bg-black/80 text-white rounded-full p-1.5 transition-all cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+              <video
+                src={introVid}
+                controls
+                autoPlay
+                className="w-full max-h-[70vh] object-contain"
+              />
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Main card */}
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-lg">
