@@ -12,8 +12,11 @@ import {
   ChevronUp,
   Check,
   Play,
+  Globe,
 } from "lucide-react";
 import coctLogo from "@/assets/imgs/coct-logo.png";
+import { useLanguage } from "../contexts/LanguageContext";
+import { LANGUAGE_LABELS, LANGUAGE_NAMES, Language } from "../i18n/translations";
 
 interface AccessibilityBarProps {
   fontSize: "normal" | "large" | "huge";
@@ -41,6 +44,9 @@ export default function AccessibilityBar({
 }: AccessibilityBarProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [showHelper, setShowHelper] = useState(false);
+  const [showLangMenu, setShowLangMenu] = useState(false);
+  const { language, setLanguage, t, cycleLanguage } = useLanguage();
+  const LANG_ORDER: Language[] = ["en", "af", "xh"];
 
   // Announcement helper
   const announceText = (text: string) => {
@@ -147,7 +153,7 @@ export default function AccessibilityBar({
           >
             <span className="shrink-0 animate-pulse inline-block h-2.5 w-2.5 rounded-full bg-coct-yellow" />
             <span className="font-mono uppercase tracking-wider text-[10px] shrink-0 font-extrabold">
-              Live Captions & Audio Overlay:
+              {t("a11y.captions_label")}
             </span>
             <span className="italic truncate max-w-xl font-semibold">
               "{transcript}"
@@ -157,7 +163,7 @@ export default function AccessibilityBar({
               onClick={() => setTranscript("")}
               className={`font-bold hover:underline pl-2 text-[10px] ${isHigh ? "text-slate-400 hover:text-white" : "text-red/60 hover:text-black"}`}
             >
-              Clear
+              {t("a11y.captions_clear")}
             </button>
           </motion.div>
         )}
@@ -181,15 +187,14 @@ export default function AccessibilityBar({
             <div>
               <div className="flex items-center gap-1.5">
                 <span className="font-black text-xs uppercase tracking-widest text-white drop-shadow-xs">
-                  CITY OF CAPE TOWN
+                  {t("brand.city").toUpperCase()}
                 </span>
                 <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
-                  IDP 2022-2027
+                  {t("brand.idp")}
                 </span>
               </div>
               <p className="text-[10px] text-white/90 font-medium leading-none drop-shadow-xs">
-                City of Hope for All &bull; Isixeko Sasekapa &bull; Stad
-                Kaapstad
+                {t("brand.tagline")} &bull; {t("brand.tagline_af")} &bull; {t("brand.tagline_nl")}
               </p>
             </div>
           </div>
@@ -198,7 +203,7 @@ export default function AccessibilityBar({
           <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
             {/* Visual Indicators Summary */}
             <span className="text-[10px] font-bold text-white/80 hidden sm:block">
-              Accessibility Center:
+              {t("a11y.center")}
             </span>
 
             {/* Font Control Multi-Button */}
@@ -254,7 +259,7 @@ export default function AccessibilityBar({
             >
               <Eye size={13} />
               <span>
-                {isHigh ? "High Contrast Mode ON" : "Contrast Assist"}
+                {isHigh ? t("a11y.contrast_on") : t("a11y.contrast_off")}
               </span>
             </button>
 
@@ -271,9 +276,41 @@ export default function AccessibilityBar({
             >
               <Volume2 size={13} />
               <span>
-                {speechEnabled ? " Guidance Enabled" : "Auditory Guidance"}
+                {speechEnabled ? t("a11y.speech_on") : t("a11y.speech_off")}
               </span>
             </button>
+
+            {/* Language Selector */}
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                className="p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[10px] bg-white/15 hover:bg-white/25 text-white border-white/20"
+                title={t("a11y.language")}
+              >
+                <Globe size={13} />
+                <span>{LANGUAGE_LABELS[language]}</span>
+              </button>
+              {showLangMenu && (
+                <div className="absolute right-0 top-full mt-1 z-50 rounded-xl border border-white/20 overflow-hidden shadow-xl bg-coct-navy min-w-30">
+                  {LANG_ORDER.map((lang) => (
+                    <button
+                      key={lang}
+                      type="button"
+                      onClick={() => { setLanguage(lang); setShowLangMenu(false); }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold transition-all ${
+                        language === lang
+                          ? "bg-coct-yellow text-black"
+                          : "text-white hover:bg-white/15"
+                      }`}
+                    >
+                      <span className="font-mono">{LANGUAGE_LABELS[lang]}</span>
+                      <span>{LANGUAGE_NAMES[lang]}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
 
             {/* More options panel toggler */}
             <button
@@ -307,7 +344,7 @@ export default function AccessibilityBar({
                   className={`font-black uppercase tracking-wider flex items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
                 >
                   <Eye size={15} />
-                  Visual Assistance Features
+                  {t("a11y.visual_section")}
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                   Tailored layout tools designed to support citizens with minor,
@@ -339,7 +376,7 @@ export default function AccessibilityBar({
                   className={`font-black uppercase tracking-wider flex items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-magenta"}`}
                 >
                   <Volume2 size={15} />
-                  Auditory Assistance Guidance
+                  {t("a11y.auditory_section")}
                 </h4>
                 <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
                   Support for both visually impaired (audio screen narrative
@@ -365,7 +402,7 @@ export default function AccessibilityBar({
                     }
                     className="mt-1 text-[9px] font-bold text-white bg-coct-magenta hover:bg-coct-magenta/90 px-2 py-1 rounded-md inline-flex items-center gap-1"
                   >
-                    <Play size={10} /> Test Auditory voice
+                    <Play size={10} /> {t("a11y.speech_test")}
                   </button>
                 </div>
               </div>
@@ -374,7 +411,7 @@ export default function AccessibilityBar({
               <div className="space-y-2  text-white bg-coct-navy p-4 rounded-2xl border">
                 <span className="inline-flex items-center gap-1.5 font-bold uppercase text-[10px] text-black dark:text-white">
                   <HelpCircle size={14} className="text-white shrink-0" />
-                  IDP Inclusive City Policy Notice
+                  {t("a11y.idp_notice")}
                 </span>
                 <p className="text-[10.5px] text-indigo-900/80 dark:text-slate-400 font-semibold leading-relaxed">
                   In compliance with the Cape Town{" "}

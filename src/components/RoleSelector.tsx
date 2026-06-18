@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   Shield,
   User,
@@ -20,8 +21,10 @@ import {
   Phone,
   PlayCircle,
   X,
+  UploadCloud,
 } from "lucide-react";
 import { Citizen } from "../types";
+import { SolrSearchInput } from "./SolrSearchInput";
 import introVid from "@/assets/vids/how-to-use.mp4";
 
 interface RoleSelectorProps {
@@ -50,6 +53,10 @@ export default function RoleSelector({
   const [regQ1, setRegQ1] = useState("");
   const [regQ2, setRegQ2] = useState("");
   const [regQ3, setRegQ3] = useState("");
+  const [regOccupation, setRegOccupation] = useState("");
+  const [regAddress, setRegAddress] = useState("");
+  const [regProofUploaded, setRegProofUploaded] = useState(false);
+  const [regProofFileName, setRegProofFileName] = useState("");
 
   // Forgot password states
   const [recoveryId, setRecoveryId] = useState("");
@@ -170,6 +177,9 @@ export default function RoleSelector({
       phone: regPhone.trim(),
       email: regEmail.trim(),
       password: regPassword,
+      occupation: regOccupation.trim() || "Unemployed",
+      address: regAddress.trim(),
+      proofOfAddressUploaded: regProofUploaded,
       recoveryAnswers: {
         q1: regQ1.trim(),
         q2: regQ2.trim(),
@@ -307,6 +317,7 @@ export default function RoleSelector({
   };
 
   const isHigh = contrast === "high";
+  const { t } = useLanguage();
 
   return (
     <div
@@ -322,23 +333,22 @@ export default function RoleSelector({
           }`}
         >
           <Landmark size={14} />
-          <span>City of Cape Town | Official Registry</span>
+          <span>{t("brand.city")} | {t("brand.registry")}</span>
         </div>
         <h2
           className={`text-4xl font-black tracking-tight sm:text-5xl ${isHigh ? "text-coct-yellow" : "text-coct-yellow"}`}
         >
-          CivicPortal
+          {t("portal.name")}
         </h2>
         <h2
           className={`text-4xl font-black tracking-tight sm:text-5xl ${isHigh ? "text-coct-yellow" : "text-coct-yellow"}`}
         >
-          Job Seekers
+          {t("portal.subtitle")}
         </h2>
         <p
           className={`mt-3 text-sm font-medium ${isHigh ? "text-slate-300" : "text-white/75"}`}
         >
-          Secure placement and development portal aligned with the Cape Town IDP
-          (2022-2027) directives.
+          {t("portal.description")}
         </p>
         <button
           type="button"
@@ -350,7 +360,7 @@ export default function RoleSelector({
           }`}
         >
           <PlayCircle size={14} />
-          What is this portal for?
+          {t("portal.video_cta")}
         </button>
       </div>
 
@@ -424,7 +434,7 @@ export default function RoleSelector({
                 }`}
               >
                 <User size={16} className="mr-2" />
-                Citizen Portal
+                {t("auth.citizen_tab")}
               </button>
               <button
                 id="admin-auth-tab"
@@ -442,7 +452,7 @@ export default function RoleSelector({
                 }`}
               >
                 <Shield size={16} className="mr-2" />
-                Administrator
+                {t("auth.admin_tab")}
               </button>
             </div>
           )}
@@ -475,7 +485,7 @@ export default function RoleSelector({
                       htmlFor="idnumber"
                       className={`block text-xs font-extrabold uppercase tracking-widest mb-1.5 ${isHigh ? "text-coct-yellow" : "text-slate-600"}`}
                     >
-                      National ID Number
+                      {t("auth.national_id")}
                     </label>
                     <div className="relative rounded-xl shadow-xs">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -504,7 +514,7 @@ export default function RoleSelector({
                         htmlFor="password"
                         className={`block text-xs font-extrabold uppercase tracking-widest ${isHigh ? "text-coct-yellow" : "text-slate-600"}`}
                       >
-                        Password
+                        {t("auth.password")}
                       </label>
                       <button
                         type="button"
@@ -519,7 +529,7 @@ export default function RoleSelector({
                             : "text-coct-blue hover:text-coct-blue/80"
                         }`}
                       >
-                        Forgot Password?
+                        {t("auth.forgot_password")}
                       </button>
                     </div>
                     <div className="relative rounded-xl shadow-xs">
@@ -562,12 +572,12 @@ export default function RoleSelector({
                     }`}
                   >
                     <LogIn size={16} className="mr-2" />
-                    Access My Vault
+                    {t("auth.login_btn")}
                   </button>
 
                   <div className="pt-4 border-t border-slate-100 text-center">
                     <p className="text-xs text-slate-500">
-                      ID not in the database?{" "}
+                      {t("auth.register_link")}{" "}
                       <button
                         type="button"
                         onClick={() => {
@@ -581,7 +591,7 @@ export default function RoleSelector({
                             : "text-coct-blue hover:text-coct-blue/90"
                         }`}
                       >
-                        Register New Account
+                        {t("auth.register_btn")}
                       </button>
                     </p>
                   </div>
@@ -611,7 +621,7 @@ export default function RoleSelector({
                     </button>
                     <div>
                       <h3 className="text-sm font-black text-slate-800">
-                        New Account Creation
+                        {t("auth.register_title")}
                       </h3>
                       <p className="text-[11px] text-slate-400">
                         Map your ID and secure recovery coordinates.
@@ -628,7 +638,7 @@ export default function RoleSelector({
                   <div className="grid grid-cols-2 gap-3">
                     <div>
                       <label className="block text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-1.5">
-                        National ID Number
+                        {t("auth.national_id")}
                       </label>
                       <input
                         type="text"
@@ -642,7 +652,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-[10px] font-extrabold text-slate-600 uppercase tracking-widest mb-1.5">
-                        Full Name
+                        {t("auth.full_name")}
                       </label>
                       <input
                         type="text"
@@ -675,7 +685,96 @@ export default function RoleSelector({
                     />
                   </div>
 
-                  {/* Communication Methods */}
+                  {/* Step 2: Employment & Address */}
+                  <div
+                    className={`pt-2 border-t -mx-6 px-6 py-4 space-y-3 ${isHigh ? "border-slate-800 bg-slate-900/40" : "border-slate-100 bg-slate-50"}`}
+                  >
+                    <span
+                      className={`block text-[10px] font-extrabold uppercase tracking-wider ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
+                    >
+                      Step 2: Employment & Address
+                    </span>
+
+                    {/* Occupation */}
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 mb-1">
+                        Current Occupation / Employment Status
+                      </label>
+                      <select
+                        value={regOccupation}
+                        onChange={(e) => setRegOccupation(e.target.value)}
+                        className={`block w-full px-3 py-1.5 border rounded-lg text-xs transition-all ${
+                          isHigh
+                            ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow"
+                            : "border-slate-200 text-slate-900 bg-white focus:ring-1 focus:ring-coct-blue"
+                        }`}
+                      >
+                        <option value="">— Select status —</option>
+                        <option value="Unemployed">Unemployed</option>
+                        <option value="Student">Student</option>
+                        <option value="Employed (Full-time)">Employed (Full-time)</option>
+                        <option value="Employed (Part-time)">Employed (Part-time)</option>
+                        <option value="Self-employed">Self-employed</option>
+                        <option value="Retired">Retired</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+
+                    {/* Residential Address */}
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 mb-1">
+                        Residential Address
+                      </label>
+                      <SolrSearchInput
+                        value={regAddress}
+                        isHigh={isHigh}
+                        onSelect={(result) => setRegAddress(result.value)}
+                      />
+                    </div>
+
+                    {/* Proof of Address Upload */}
+                    <div>
+                      <label className="block text-[9px] font-bold text-slate-500 mb-1">
+                        Proof of Address <span className="font-normal text-slate-400">(utility bill, bank statement)</span>
+                      </label>
+                      {regProofUploaded ? (
+                        <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-lg text-xs font-bold text-emerald-700">
+                          <CheckCircle size={13} className="shrink-0" />
+                          <span className="truncate">{regProofFileName || "Document uploaded"}</span>
+                          <button
+                            type="button"
+                            onClick={() => { setRegProofUploaded(false); setRegProofFileName(""); }}
+                            className="ml-auto text-slate-400 hover:text-red-500"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={`flex items-center gap-2 px-3 py-1.5 border rounded-lg text-xs font-bold cursor-pointer transition-all ${
+                          isHigh
+                            ? "bg-black text-white border-coct-yellow hover:bg-slate-900"
+                            : "bg-white border-dashed border-slate-300 text-slate-500 hover:border-coct-blue hover:text-coct-blue"
+                        }`}>
+                          <UploadCloud size={13} className="shrink-0" />
+                          <span>Upload document (PDF, JPG, PNG)</span>
+                          <input
+                            type="file"
+                            accept=".pdf,.jpg,.jpeg,.png"
+                            className="hidden"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) {
+                                setRegProofFileName(file.name);
+                                setRegProofUploaded(true);
+                              }
+                            }}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Step 3: Communication Methods */}
                   <div
                     className={`pt-2 border-t -mx-6 px-6 py-4 space-y-3 ${isHigh ? "border-slate-800 bg-slate-900/40" : "border-slate-100 bg-slate-50"}`}
                   >
@@ -683,7 +782,7 @@ export default function RoleSelector({
                       <span
                         className={`block text-[10px] font-extrabold uppercase tracking-wider ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
                       >
-                        Step 2: Communication Methods
+                        Step 3: Communication Methods
                       </span>
                     </div>
                     <p
@@ -695,7 +794,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-[9px] font-bold text-slate-500 mb-1">
-                        Email Address
+                        {t("auth.email")}
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -717,7 +816,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-[9px] font-bold text-slate-500 mb-1">
-                        Cellphone Number
+                        {t("auth.phone")}
                       </label>
                       <div className="relative">
                         <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -751,7 +850,7 @@ export default function RoleSelector({
                           isHigh ? "text-coct-yellow" : "text-coct-blue"
                         }
                       />
-                      Step 3: Account Recovery Safety Settings
+                      Step 4: Account Recovery Safety Settings
                     </span>
                     <p
                       className={`text-[10px] leading-normal mb-1 ${isHigh ? "text-slate-300" : "text-slate-400"}`}
@@ -825,7 +924,7 @@ export default function RoleSelector({
                     }`}
                   >
                     <UserPlus size={15} className="mr-2" />
-                    Register National Placement Index
+                    {t("auth.register_btn")}
                   </button>
 
                   <button
@@ -836,7 +935,7 @@ export default function RoleSelector({
                     }}
                     className="w-full text-center text-xs text-slate-400 font-bold hover:underline"
                   >
-                    Return to Login
+                    {t("auth.back_to_login")}
                   </button>
                 </motion.form>
               )}
@@ -1058,7 +1157,7 @@ export default function RoleSelector({
                     type="submit"
                     className="w-full flex items-center justify-center py-3 px-4 rounded-full text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 cursor-pointer"
                   >
-                    Reset Password & Sign In
+                    {t("auth.reset_password_btn")}
                   </button>
                 </motion.form>
               )}
@@ -1134,7 +1233,7 @@ export default function RoleSelector({
                   htmlFor="admincode"
                   className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-1.5"
                 >
-                  Administrative Credentials
+                  {t("auth.admin_access_code")}
                 </label>
                 <div className="relative rounded-xl shadow-xs">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -1174,7 +1273,7 @@ export default function RoleSelector({
                 className="w-full flex items-center justify-center py-3.5 px-4 rounded-full text-sm font-bold text-white bg-slate-950 hover:bg-slate-900 focus:ring-2 focus:ring-offset-2 focus:ring-slate-700 shadow-md hover:shadow-lg transition-all cursor-pointer"
               >
                 <Shield size={16} className="mr-2" />
-                Access Admin Control
+                {t("auth.admin_login_btn")}
               </button>
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50 -mx-6 -mb-8 px-6 py-4 rounded-b-4xl">

@@ -217,7 +217,7 @@ export default function WhatsAppChatbot({ contrast = "city" }: WhatsAppChatbotPr
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-bold text-sm leading-tight truncate">{BOT_NAME}</p>
-                <p className="text-green-200 text-[11px] font-medium">Online — typically replies instantly</p>
+                <p className="text-green-200 text-[11px] font-medium">Online | typically replies instantly or message this no. +27 123 456 7890</p>
               </div>
               <button
                 onClick={() => setOpen(false)}

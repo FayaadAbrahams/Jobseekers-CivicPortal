@@ -12,6 +12,9 @@
     "lint": "tsc --noEmit"
   },
   "dependencies": {
+    "@arcgis/core": "4.26",
+    "@arcgis/map-components": "^5.0.19",
+    "@esri/calcite-components": "^5.1.1",
     "@google/genai": "^2.4.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vitejs/plugin-react": "^5.0.4",

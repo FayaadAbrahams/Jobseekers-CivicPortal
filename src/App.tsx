@@ -13,6 +13,7 @@ import CitizenDashboard from "./components/CitizenDashboard";
 import AccessibilityBar from "./components/AccessibilityBar";
 import WhatsAppChatbot from "./components/WhatsAppChatbot";
 import { motion, AnimatePresence } from "motion/react";
+import { LanguageProvider } from "./contexts/LanguageContext";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{
@@ -158,6 +159,7 @@ export default function App() {
   };
 
   return (
+    <LanguageProvider>
     <div
       className={`${
         contrast === "high"
@@ -246,5 +248,6 @@ export default function App() {
         ) : null}
       </AnimatePresence>
     </div>
+    </LanguageProvider>
   );
 }

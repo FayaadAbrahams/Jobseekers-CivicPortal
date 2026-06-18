@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   Building,
   Briefcase,
@@ -59,6 +60,7 @@ export default function AdminDashboard({
   contrast = "city",
 }: AdminDashboardProps) {
   const isHigh = contrast === "high";
+  const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<
     "jobs" | "citizens" | "applications"
@@ -460,7 +462,7 @@ export default function AdminDashboard({
               className="flex items-center space-x-1.5 px-4.5 py-2.5 border border-slate-700 hover:bg-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
               <LogOut size={14} />
-              <span>Exit Console</span>
+              <span>{t("admin.logout")}</span>
             </button>
           </div>
         </div>
@@ -541,7 +543,7 @@ export default function AdminDashboard({
             }`}
           >
             <Briefcase size={18} />
-            <span>Job Opportunities</span>
+            <span>{t("admin.jobs_tab")}</span>
           </button>
           <button
             id="tab-btn-citizens"
@@ -557,7 +559,7 @@ export default function AdminDashboard({
             }`}
           >
             <Users size={18} />
-            <span>Citizen Directory</span>
+            <span>{t("admin.citizens_tab")}</span>
           </button>
           <button
             id="tab-btn-applications"
@@ -573,7 +575,7 @@ export default function AdminDashboard({
             }`}
           >
             <Inbox size={18} />
-            <span>Placement & Application Bureau</span>
+            <span>{t("admin.applications_tab")}</span>
           </button>
         </div>
 
@@ -605,7 +607,7 @@ export default function AdminDashboard({
                     onChange={(e) => setJobCatFilter(e.target.value)}
                     className="font-bold bg-transparent text-slate-800 focus:outline-hidden border-none p-0 cursor-pointer text-xs"
                   >
-                    <option value="All">All Sectors</option>
+                    <option value="All">{t("jobs.category_all")}</option>
                     <option value="Administration">Administration</option>
                     <option value="Technical">Technical</option>
                     <option value="Skilled Labor">Skilled Labor</option>
@@ -624,7 +626,7 @@ export default function AdminDashboard({
                   className="flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
                 >
                   <Plus size={16} />
-                  <span>Post Vacancy</span>
+                  <span>{t("admin.add_job")}</span>
                 </button>
               </div>
             </div>
@@ -841,7 +843,7 @@ export default function AdminDashboard({
                         }}
                         className="px-4 py-2 bg-slate-100 text-slate-700 hover:bg-slate-200 rounded-xl text-sm font-semibold transition-all"
                       >
-                        Cancel
+                        {t("action.cancel")}
                       </button>
                       <button
                         id="admin-submit-job-btn"
@@ -849,8 +851,8 @@ export default function AdminDashboard({
                         className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-sm font-semibold shadow-md transition-all cursor-pointer"
                       >
                         {editingJobId
-                          ? "Save Core Updates"
-                          : "Confirm & Publish Vacancy"}
+                          ? t("action.save")
+                          : t("admin.add_job")}
                       </button>
                     </div>
                   </form>
@@ -867,7 +869,7 @@ export default function AdminDashboard({
                 <div className="col-span-full bg-white text-center py-12 px-6 rounded-4xl border border-slate-155 text-slate-400">
                   <Briefcase size={40} className="mx-auto mb-3 opacity-30" />
                   <p className="font-semibold text-slate-700">
-                    No Job Listings Match Criteria
+                    {t("jobs.no_results")}
                   </p>
                   <p className="text-xs text-slate-400 mt-1">
                     Try relaxing queries, filters, or publish a new opportunity.
@@ -891,7 +893,7 @@ export default function AdminDashboard({
                             onClick={() => handleEditJob(job)}
                             className="p-1 px-3 text-slate-500 hover:text-indigo-600 hover:bg-indigo-50 border border-slate-150 hover:border-indigo-200 rounded-lg text-xs font-bold transition-all"
                           >
-                            Edit
+                            {t("action.edit")}
                           </button>
                           <button
                             title="Delete Listing"
@@ -899,7 +901,7 @@ export default function AdminDashboard({
                             onClick={() => handleDeleteJob(job.id)}
                             className="p-1 px-3 text-slate-400 hover:text-red-600 hover:bg-red-50 border border-transparent rounded-lg text-xs font-bold transition-all"
                           >
-                            Delete
+                            {t("action.delete")}
                           </button>
                         </div>
                       </div>

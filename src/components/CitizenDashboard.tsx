@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { useLanguage } from "../contexts/LanguageContext";
 import {
   Briefcase,
   Calendar,
@@ -33,8 +34,11 @@ import {
   Sparkle,
   AlertTriangle,
   Camera,
+  X,
 } from "lucide-react";
 import CameraScanner from "./CameraScanner";
+
+
 import {
   Job,
   Citizen,
@@ -43,6 +47,7 @@ import {
   SystemNotification,
 } from "../types";
 import * as pdfjsLib from "pdfjs-dist";
+import { SolrSearchInput } from "./SolrSearchInput";
 pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
   "pdfjs-dist/build/pdf.worker.min.mjs",
   import.meta.url,
@@ -78,9 +83,10 @@ export default function CitizenDashboard({
   contrast = "city",
 }: CitizenDashboardProps) {
   const isHigh = contrast === "high";
+  const { t } = useLanguage();
 
   const [activeTab, setActiveTab] = useState<
-    "vacancies" | "trackers" | "documents" | "notifications"
+    "vacancies" | "trackers" | "documents" | "notifications" | "profile"
   >("vacancies");
 
   // Query & filters for jobs
@@ -104,6 +110,17 @@ export default function CitizenDashboard({
     citizen.skills || [],
   );
   const [newSkillText, setNewSkillText] = useState("");
+
+  // Profile editor state
+  const [profileOccupation, setProfileOccupation] = useState(
+    citizen.occupation || "",
+  );
+  const [profileAddress, setProfileAddress] = useState(citizen.address || "");
+  const [profileProofUploaded, setProfileProofUploaded] = useState(
+    citizen.proofOfAddressUploaded || false,
+  );
+  const [profileProofFileName, setProfileProofFileName] = useState("");
+  const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
 
   // CV Scan state variables
   const [showCvScanner, setShowCvScanner] = useState(false);
@@ -206,6 +223,36 @@ SKILLS:
 - 4 years active site workshop experience`,
     },
   ];
+
+  const handleSaveProfile = () => {
+    const updatedCitizens = allCitizens.map((cit) => {
+      if (cit.idNumber === citizen.idNumber) {
+        return {
+          ...cit,
+          phone: citizenPhone,
+          email: citizenEmail,
+          education: citizenEducation,
+          skills: citizenSkillsSelected,
+          occupation: profileOccupation,
+          address: profileAddress,
+          proofOfAddressUploaded: profileProofUploaded,
+        };
+      }
+      return cit;
+    });
+    setAllCitizens(updatedCitizens);
+    localStorage.setItem("cp_citizens", JSON.stringify(updatedCitizens));
+    // Mirror onto the live citizen object
+    citizen.phone = citizenPhone;
+    citizen.email = citizenEmail;
+    citizen.education = citizenEducation;
+    citizen.skills = citizenSkillsSelected;
+    citizen.occupation = profileOccupation;
+    citizen.address = profileAddress;
+    citizen.proofOfAddressUploaded = profileProofUploaded;
+    setProfileSaveSuccess(true);
+    setTimeout(() => setProfileSaveSuccess(false), 3000);
+  };
 
   const handleCvScanAndExtract = () => {
     if (!cvText.trim()) {
@@ -462,7 +509,9 @@ SKILLS:
         }
         setCvText(fullText.trim());
       } catch {
-        alert("Could not extract text from this PDF. Please paste your CV text manually.");
+        alert(
+          "Could not extract text from this PDF. Please paste your CV text manually.",
+        );
       }
     } else {
       alert("Please upload a .txt or .pdf file.");
@@ -671,7 +720,7 @@ SKILLS:
                 {citizen.fullName}
               </h1>
               <p className="text-xs text-slate-400 mt-1.5 font-mono tracking-widest">
-                National ID: {citizen.idNumber}
+                {t("nav.national_id_label")} {citizen.idNumber}
               </p>
             </div>
           </div>
@@ -697,7 +746,7 @@ SKILLS:
               className="flex items-center space-x-1.5 px-4.5 py-2.5 border border-slate-700 hover:bg-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
             >
               <LogOut size={13} />
-              <span>Sign Out</span>
+              <span>{t("nav.sign_out")}</span>
             </button>
           </div>
         </div>
@@ -723,7 +772,7 @@ SKILLS:
             }`}
           >
             <Briefcase size={18} />
-            <span>Search Vacancies</span>
+            <span>{t("nav.search_vacancies")}</span>
           </button>
           <button
             id="cit-tab-btn-trackers"
@@ -739,7 +788,7 @@ SKILLS:
             }`}
           >
             <Clock size={18} />
-            <span>My Application Trackers</span>
+            <span>{t("nav.application_trackers")}</span>
             {myApplications.length > 0 && (
               <span
                 className={`ml-1.5 px-2 py-0.5 rounded-full text-[10px] font-bold ${isHigh ? "bg-yellow-400 text-black" : "bg-indigo-100 text-indigo-800"}`}
@@ -762,7 +811,24 @@ SKILLS:
             }`}
           >
             <FileText size={18} />
-            <span>My Documents Vault</span>
+            <span>{t("nav.documents_vault")}</span>
+          </button>
+
+          <button
+            id="cit-tab-btn-profile"
+            onClick={() => setActiveTab("profile")}
+            className={`flex items-center space-x-2 py-4 px-1 border-b-2 font-bold text-sm whitespace-nowrap transition-all ${
+              activeTab === "profile"
+                ? isHigh
+                  ? "border-yellow-400 text-yellow-400 font-extrabold"
+                  : "border-indigo-600 text-indigo-600 font-extrabold"
+                : isHigh
+                  ? "border-transparent text-slate-400 hover:text-white"
+                  : "border-transparent text-slate-500 hover:text-slate-850"
+            }`}
+          >
+            <User size={18} />
+            <span>{t("profile.tab")}</span>
           </button>
         </div>
 
@@ -778,7 +844,7 @@ SKILLS:
                 <input
                   id="citizen-jobs-search"
                   type="text"
-                  placeholder="Query publications by title, state department, or municipality..."
+                  placeholder={t("jobs.search_placeholder")}
                   value={jobQuery}
                   onChange={(e) => setJobQuery(e.target.value)}
                   className="block w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-205 focus:bg-white rounded-xl focus:outline-hidden focus:ring-2 focus:ring-indigo-500 text-sm transition-all text-slate-900 font-medium"
@@ -794,7 +860,7 @@ SKILLS:
                   onChange={(e) => setJobCatFilter(e.target.value)}
                   className="font-bold bg-transparent text-slate-800 focus:outline-hidden border-none p-0 cursor-pointer text-xs"
                 >
-                  <option value="All">All Categories</option>
+                  <option value="All">{t("jobs.category_all")}</option>
                   <option value="Administration">Administration</option>
                   <option value="Technical">Technical & IT</option>
                   <option value="Skilled Labor">Skilled Labor</option>
@@ -817,7 +883,7 @@ SKILLS:
                     className="mx-auto text-slate-300 mb-3"
                   />
                   <p className="font-semibold text-slate-700">
-                    No Placement Openings Found
+                    {t("jobs.no_results")}
                   </p>
                   <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
                     Try adjusting your filters or search keys above.
@@ -1437,8 +1503,12 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <label className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
-                                        {isUploading === "id" ? "Processing..." : "Upload File"}
+                                      <label
+                                        className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
+                                      >
+                                        {isUploading === "id"
+                                          ? "Processing..."
+                                          : "Upload File"}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1472,8 +1542,12 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <label className={`px-3 py-1.5 bg-blue-55 text-blue-700 rounded-lg font-bold hover:bg-blue-100 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
-                                        {isUploading === "cv" ? "Processing..." : "Upload File"}
+                                      <label
+                                        className={`px-3 py-1.5 bg-blue-55 text-blue-700 rounded-lg font-bold hover:bg-blue-100 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
+                                      >
+                                        {isUploading === "cv"
+                                          ? "Processing..."
+                                          : "Upload File"}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1506,8 +1580,12 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <label className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
-                                        {isUploading === "qualifications" ? "Processing..." : "Upload File"}
+                                      <label
+                                        className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
+                                      >
+                                        {isUploading === "qualifications"
+                                          ? "Processing..."
+                                          : "Upload File"}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1515,7 +1593,11 @@ SKILLS:
                                           disabled={isUploading !== null}
                                           onChange={(e) => {
                                             const f = e.target.files?.[0];
-                                            if (f) simulateUpload("qualifications", f.name);
+                                            if (f)
+                                              simulateUpload(
+                                                "qualifications",
+                                                f.name,
+                                              );
                                             e.target.value = "";
                                           }}
                                         />
@@ -1541,8 +1623,12 @@ SKILLS:
                                         ✓ Uploaded
                                       </span>
                                     ) : (
-                                      <label className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}>
-                                        {isUploading === "address" ? "Processing..." : "Upload File"}
+                                      <label
+                                        className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
+                                      >
+                                        {isUploading === "address"
+                                          ? "Processing..."
+                                          : "Upload File"}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1550,7 +1636,8 @@ SKILLS:
                                           disabled={isUploading !== null}
                                           onChange={(e) => {
                                             const f = e.target.files?.[0];
-                                            if (f) simulateUpload("address", f.name);
+                                            if (f)
+                                              simulateUpload("address", f.name);
                                             e.target.value = "";
                                           }}
                                         />
@@ -1678,7 +1765,7 @@ SKILLS:
                                   onClick={handleFinalSubmitApplication}
                                   className="px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg font-bold shadow-md cursor-pointer"
                                 >
-                                  Submit Placement Application
+                                  {t("action.submit")}
                                 </button>
                               </div>
                             </div>
@@ -2226,7 +2313,11 @@ SKILLS:
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     className="hidden"
                                     onChange={(e) => {
-                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "idCopy");
+                                      if (e.target.files?.[0])
+                                        handleUploadMissingDoc(
+                                          app.id,
+                                          "idCopy",
+                                        );
                                       e.target.value = "";
                                     }}
                                   />
@@ -2240,7 +2331,8 @@ SKILLS:
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     className="hidden"
                                     onChange={(e) => {
-                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "cv");
+                                      if (e.target.files?.[0])
+                                        handleUploadMissingDoc(app.id, "cv");
                                       e.target.value = "";
                                     }}
                                   />
@@ -2254,7 +2346,11 @@ SKILLS:
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     className="hidden"
                                     onChange={(e) => {
-                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "qualifications");
+                                      if (e.target.files?.[0])
+                                        handleUploadMissingDoc(
+                                          app.id,
+                                          "qualifications",
+                                        );
                                       e.target.value = "";
                                     }}
                                   />
@@ -2268,7 +2364,11 @@ SKILLS:
                                     accept=".pdf,.jpg,.jpeg,.png"
                                     className="hidden"
                                     onChange={(e) => {
-                                      if (e.target.files?.[0]) handleUploadMissingDoc(app.id, "proofOfAddress");
+                                      if (e.target.files?.[0])
+                                        handleUploadMissingDoc(
+                                          app.id,
+                                          "proofOfAddress",
+                                        );
                                       e.target.value = "";
                                     }}
                                   />
@@ -2306,7 +2406,7 @@ SKILLS:
           <div className="space-y-6" id="citizen-documents-tab">
             <div className="bg-white p-6 rounded-2xl border border-slate-150 space-y-1.5">
               <h3 className="text-base font-bold text-slate-905">
-                My Verified Documents Vault
+                {t("docs.vault_title")}
               </h3>
               <p className="text-xs text-slate-400">
                 Manage uploaded scans to pre-qualify automatically across
@@ -2414,7 +2514,337 @@ SKILLS:
           </div>
         )}
 
-        {/* ==================== TAB 4: NOTIFICATIONS HUB ==================== */}
+        {/* ==================== TAB 4: MY PROFILE ==================== */}
+        {activeTab === "profile" && (
+          <div className="space-y-6" id="citizen-profile-tab">
+            {/* Header */}
+            <div
+              className={`p-6 rounded-2xl border space-y-1.5 ${isHigh ? "bg-black border-yellow-400" : "bg-white border-slate-150"}`}
+            >
+              <h3 className="text-base font-bold">{t("profile.title")}</h3>
+              <p
+                className={`text-xs ${isHigh ? "text-slate-400" : "text-slate-400"}`}
+              >
+                {t("profile.subtitle")}
+              </p>
+            </div>
+
+            {profileSaveSuccess && (
+              <div className="flex items-center gap-2 p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-emerald-800 text-xs font-bold">
+                <CheckCircle size={15} className="shrink-0 text-emerald-600" />
+                {t("profile.save_success")}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* ── Personal Info ── */}
+              <div
+                className={`p-6 rounded-2xl border space-y-4 ${isHigh ? "bg-black border-slate-700" : "bg-white border-slate-150 shadow-xs"}`}
+              >
+                <h4
+                  className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
+                >
+                  <User size={14} /> {t("profile.personal_section")}
+                </h4>
+
+                {/* Full Name (display only — tied to ID) */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Full Name
+                  </label>
+                  <div
+                    className={`px-3 py-2 rounded-xl text-sm font-semibold border ${isHigh ? "bg-slate-900 border-slate-700 text-slate-300" : "bg-slate-50 border-slate-150 text-slate-700"}`}
+                  >
+                    {citizen.fullName}
+                  </div>
+                  <p className="text-[10px] text-slate-400 mt-0.5">
+                    Name is linked to your National ID and cannot be changed
+                    here.
+                  </p>
+                </div>
+
+                {/* Email */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Email Address
+                  </label>
+                  <div className="relative">
+                    <Mail
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="email"
+                      value={citizenEmail}
+                      onChange={(e) => setCitizenEmail(e.target.value)}
+                      placeholder="e.g. name@example.com"
+                      className={`block w-full pl-8 pr-3 py-2 border rounded-xl text-sm font-medium transition-all focus:outline-hidden focus:ring-2 ${isHigh ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow" : "border-slate-200 text-slate-900 focus:ring-indigo-400"}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Phone */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Phone Number
+                  </label>
+                  <div className="relative">
+                    <Phone
+                      size={14}
+                      className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                    />
+                    <input
+                      type="tel"
+                      value={citizenPhone}
+                      onChange={(e) => setCitizenPhone(e.target.value)}
+                      placeholder="e.g. 082 123 4567"
+                      className={`block w-full pl-8 pr-3 py-2 border rounded-xl text-sm font-medium transition-all focus:outline-hidden focus:ring-2 ${isHigh ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow" : "border-slate-200 text-slate-900 focus:ring-indigo-400"}`}
+                    />
+                  </div>
+                </div>
+
+                {/* Occupation */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Current Occupation / Employment Status
+                  </label>
+                  <select
+                    value={profileOccupation}
+                    onChange={(e) => setProfileOccupation(e.target.value)}
+                    className={`block w-full px-3 py-2 border rounded-xl text-sm font-medium transition-all focus:outline-hidden focus:ring-2 ${isHigh ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow" : "border-slate-200 text-slate-900 focus:ring-indigo-400"}`}
+                  >
+                    <option value="">— Select status —</option>
+                    <option value="Unemployed">
+                      {t("profile.occ_unemployed")}
+                    </option>
+                    <option value="Student">{t("profile.occ_student")}</option>
+                    <option value="Employed (Full-time)">
+                      {t("profile.occ_employed_ft")}
+                    </option>
+                    <option value="Employed (Part-time)">
+                      {t("profile.occ_employed_pt")}
+                    </option>
+                    <option value="Self-employed">
+                      {t("profile.occ_self")}
+                    </option>
+                    <option value="Retired">{t("profile.occ_retired")}</option>
+                    <option value="Other">{t("profile.occ_other")}</option>
+                  </select>
+                </div>
+
+                {/* Education */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Highest Education Level
+                  </label>
+                  <select
+                    value={citizenEducation}
+                    onChange={(e) => setCitizenEducation(e.target.value)}
+                    className={`block w-full px-3 py-2 border rounded-xl text-sm font-medium transition-all focus:outline-hidden focus:ring-2 ${isHigh ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow" : "border-slate-200 text-slate-900 focus:ring-indigo-400"}`}
+                  >
+                    <option value="No formal education">
+                      No formal education
+                    </option>
+                    <option value="Primary School">Primary School</option>
+                    <option value="High School Level">
+                      High School (Grade 9–11)
+                    </option>
+                    <option value="Matric (Grade 12)">Matric (Grade 12)</option>
+                    <option value="Certificate / NQF 1-3">
+                      Certificate / NQF 1–3
+                    </option>
+                    <option value="Diploma / NQF 4-6">Diploma / NQF 4–6</option>
+                    <option value="Degree / NQF 7+">Degree / NQF 7+</option>
+                    <option value="Postgraduate">Postgraduate</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* ── Address & Documents ── */}
+              <div
+                className={`p-6 rounded-2xl border space-y-4 ${isHigh ? "bg-black border-slate-700" : "bg-white border-slate-150 shadow-xs"}`}
+              >
+                <h4
+                  className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-magenta"}`}
+                >
+                  <MapPin size={14} /> {t("profile.address_section")}
+                </h4>
+
+                {/* Address */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Residential Address
+                  </label>
+                  {/* <textarea
+                    rows={3}
+                    value={profileAddress}
+                    onChange={(e) => setProfileAddress(e.target.value)}
+                    placeholder="e.g. 12 Main Road, Mitchells Plain, Cape Town, 7785"
+                    className={`block w-full px-3 py-2 border rounded-xl text-sm font-medium transition-all focus:outline-hidden focus:ring-2 resize-none ${isHigh ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow" : "border-slate-200 text-slate-900 focus:ring-indigo-400"}`}
+                  /> */}
+                  <SolrSearchInput
+                    value={profileAddress}
+                    isHigh={isHigh}
+                    onSelect={(result) => setProfileAddress(result.value)}
+                  />
+                </div>
+
+                {/* Proof of Address Upload */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Proof of Address
+                    <span className="ml-1.5 font-normal normal-case text-slate-400">
+                      (utility bill, bank statement, lease)
+                    </span>
+                  </label>
+
+                  {profileProofUploaded ? (
+                    <div
+                      className={`flex items-center gap-2.5 p-3 rounded-xl border text-xs font-bold ${isHigh ? "bg-emerald-950 border-emerald-600 text-emerald-300" : "bg-emerald-50 border-emerald-200 text-emerald-700"}`}
+                    >
+                      <CheckCircle
+                        size={15}
+                        className="shrink-0 text-emerald-500"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="font-extrabold">Document on file</p>
+                        {profileProofFileName && (
+                          <p className="truncate text-[10px] font-mono opacity-70">
+                            {profileProofFileName}
+                          </p>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setProfileProofUploaded(false);
+                          setProfileProofFileName("");
+                        }}
+                        className="shrink-0 text-slate-400 hover:text-red-500 transition-colors"
+                        title="Remove document"
+                      >
+                        <Trash size={13} />
+                      </button>
+                    </div>
+                  ) : (
+                    <label
+                      className={`flex flex-col items-center justify-center gap-2 p-5 rounded-xl border-2 border-dashed cursor-pointer transition-all ${isHigh ? "border-slate-600 hover:border-coct-yellow text-slate-400 hover:text-white" : "border-slate-200 hover:border-indigo-400 text-slate-400 hover:text-indigo-600"}`}
+                    >
+                      <UploadCloud size={22} />
+                      <span className="text-xs font-bold">
+                        {t("profile.proof_upload_cta")}
+                      </span>
+                      <span className="text-[10px]">
+                        {t("profile.proof_upload_hint")}
+                      </span>
+                      <input
+                        type="file"
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        className="hidden"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setProfileProofFileName(file.name);
+                            setProfileProofUploaded(true);
+                          }
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Skills summary */}
+                <div>
+                  <label
+                    className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                  >
+                    Skills on File
+                  </label>
+                  {citizenSkillsSelected.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {citizenSkillsSelected.map((skill) => (
+                        <span
+                          key={skill}
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-bold ${isHigh ? "bg-slate-800 text-white" : "bg-indigo-50 text-indigo-800"}`}
+                        >
+                          {skill}
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setCitizenSkillsSelected(
+                                citizenSkillsSelected.filter(
+                                  (s) => s !== skill,
+                                ),
+                              )
+                            }
+                            className="hover:text-red-500"
+                          >
+                            <X size={10} />
+                          </button>
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-slate-400">
+                      {t("profile.skills_empty")}
+                    </p>
+                  )}
+                  {/* Add a skill inline */}
+                  <div className="flex gap-2 mt-2">
+                    <input
+                      type="text"
+                      value={newSkillText}
+                      onChange={(e) => setNewSkillText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          e.preventDefault();
+                          handleAddSkill();
+                        }
+                      }}
+                      placeholder={t("profile.add_skill")}
+                      className={`flex-1 px-3 py-1.5 border rounded-lg text-xs font-medium focus:outline-hidden focus:ring-2 ${isHigh ? "bg-black text-white border-coct-yellow focus:ring-coct-yellow" : "border-slate-200 text-slate-900 focus:ring-indigo-400"}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={handleAddSkill}
+                      className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={handleSaveProfile}
+                className="flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-md transition-all cursor-pointer"
+              >
+                <Check size={16} />
+                {t("profile.save_btn")}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* ==================== TAB 5: NOTIFICATIONS HUB ==================== */}
         {activeTab === "notifications" && (
           <div className="space-y-6" id="citizen-notifications-tab">
             <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-150">
@@ -2433,7 +2863,7 @@ SKILLS:
                   onClick={handleClearAllNotifications}
                   className="text-xs font-semibold hover:bg-red-50 text-red-650 hover:border-red-200 border border-transparent px-3 py-1.5 rounded-lg transition-all cursor-pointer"
                 >
-                  Clear Inbox
+                  {t("notif.clear_all")}
                 </button>
               )}
             </div>
@@ -2445,8 +2875,7 @@ SKILLS:
                     className="mx-auto mb-2 opacity-30 text-slate-400"
                     size={32}
                   />
-                  You have an empty communication tray. Notification notices
-                  appear automatically on status adjustments.
+                  {t("notif.no_notifications")}
                 </div>
               ) : (
                 myNotifications.map((n) => (

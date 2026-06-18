@@ -23,6 +23,9 @@ export interface Citizen {
   education?: string;
   gender?: string;
   password?: string;
+  occupation?: string;
+  address?: string;
+  proofOfAddressUploaded?: boolean;
   recoveryAnswers?: {
     q1: string; // Mother's maiden name
     q2: string; // Birthplace
