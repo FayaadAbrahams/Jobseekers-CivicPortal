@@ -35,9 +35,9 @@ import {
   AlertTriangle,
   Camera,
   X,
+  Eye,
 } from "lucide-react";
 import CameraScanner from "./CameraScanner";
-
 
 import {
   Job,
@@ -45,6 +45,7 @@ import {
   Application,
   Interview,
   SystemNotification,
+  WorkExperience,
 } from "../types";
 import * as pdfjsLib from "pdfjs-dist";
 import { SolrSearchInput } from "./SolrSearchInput";
@@ -121,6 +122,20 @@ export default function CitizenDashboard({
   );
   const [profileProofFileName, setProfileProofFileName] = useState("");
   const [profileSaveSuccess, setProfileSaveSuccess] = useState(false);
+
+  // Work experience
+  const [workExperiences, setWorkExperiences] = useState<WorkExperience[]>(
+    citizen.workExperience || [],
+  );
+  const emptyExp = (): WorkExperience => ({
+    jobTitle: "",
+    employer: "",
+    startDate: "",
+    endDate: "",
+    description: "",
+  });
+  const [editingExp, setEditingExp] = useState<WorkExperience | null>(null);
+  const [editingExpIndex, setEditingExpIndex] = useState<number | null>(null);
 
   // CV Scan state variables
   const [showCvScanner, setShowCvScanner] = useState(false);
@@ -236,6 +251,7 @@ SKILLS:
           occupation: profileOccupation,
           address: profileAddress,
           proofOfAddressUploaded: profileProofUploaded,
+          workExperience: workExperiences,
         };
       }
       return cit;
@@ -250,6 +266,7 @@ SKILLS:
     citizen.occupation = profileOccupation;
     citizen.address = profileAddress;
     citizen.proofOfAddressUploaded = profileProofUploaded;
+    citizen.workExperience = workExperiences;
     setProfileSaveSuccess(true);
     setTimeout(() => setProfileSaveSuccess(false), 3000);
   };
@@ -400,7 +417,7 @@ SKILLS:
 
   // Draft documents uploaded
   const [uploadedId, setUploadedId] = useState(true);
-  const [uploadedCv, setUploadedCv] = useState(false);
+  const [uploadedCv, setUploadedCv] = useState<any>(false);
   const [uploadedQuails, setUploadedQuails] = useState(false);
   const [uploadedAddr, setUploadedAddr] = useState(false);
 
@@ -420,6 +437,30 @@ SKILLS:
 
   // Uploading animation state
   const [isUploading, setIsUploading] = useState<string | null>(null);
+
+  // Document blob URLs for actual file preview (in-memory this session)
+  const [docBlobUrls, setDocBlobUrls] = useState<Record<string, string | null>>(
+    {
+      id: null,
+      cv: null,
+      qualifications: null,
+      address: null,
+    },
+  );
+  const [docMimeTypes, setDocMimeTypes] = useState<
+    Record<string, string | null>
+  >({
+    id: null,
+    cv: null,
+    qualifications: null,
+    address: null,
+  });
+  // Active preview
+  const [previewDoc, setPreviewDoc] = useState<{
+    url: string;
+    mime: string;
+    name: string;
+  } | null>(null);
 
   // Camera scanner state
   const [showCameraScanner, setShowCameraScanner] = useState(false);
@@ -445,31 +486,63 @@ SKILLS:
   );
   const unreadNotifications = myNotifications.filter((n) => !n.isRead);
 
-  // Document upload handler — accepts an optional real file for display
-  const simulateUpload = (
+  // Mark a document as uploaded (used by camera captures which have no real File object)
+  const markDocUploaded = (
     docType: "id" | "cv" | "qualifications" | "address",
     fileName?: string,
   ) => {
+    if (docType === "id") {
+      setUploadedId(true);
+      if (fileName) setUploadedIdFileName(fileName);
+    }
+    if (docType === "cv") {
+      setUploadedCv(true);
+      if (fileName) setUploadedCvFileName(fileName);
+    }
+    if (docType === "qualifications") {
+      setUploadedQuails(true);
+      if (fileName) setUploadedQuailsFileName(fileName);
+    }
+    if (docType === "address") {
+      setUploadedAddr(true);
+      if (fileName) setUploadedAddrFileName(fileName);
+    }
+  };
+
+  // Real document upload: reads the file, creates blob URL for preview,
+  // persists dataUrl to localStorage for admin access, then marks as uploaded.
+  const uploadDocument = (
+    docType: "id" | "cv" | "qualifications" | "address",
+    file: File,
+  ) => {
     setIsUploading(docType);
-    setTimeout(() => {
+
+    // Blob URL for immediate in-session preview
+    const blobUrl = URL.createObjectURL(file);
+    setDocBlobUrls((prev) => ({ ...prev, [docType]: blobUrl }));
+    setDocMimeTypes((prev) => ({ ...prev, [docType]: file.type }));
+
+    // FileReader persists a base64 dataUrl to localStorage so admins can view it
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        localStorage.setItem(
+          `cp_docpreview_${citizen.idNumber}_${docType}`,
+          JSON.stringify({
+            dataUrl: ev.target?.result,
+            mimeType: file.type,
+            fileName: file.name,
+          }),
+        );
+      } catch {}
       setIsUploading(null);
-      if (docType === "id") {
-        setUploadedId(true);
-        if (fileName) setUploadedIdFileName(fileName);
-      }
-      if (docType === "cv") {
-        setUploadedCv(true);
-        if (fileName) setUploadedCvFileName(fileName);
-      }
-      if (docType === "qualifications") {
-        setUploadedQuails(true);
-        if (fileName) setUploadedQuailsFileName(fileName);
-      }
-      if (docType === "address") {
-        setUploadedAddr(true);
-        if (fileName) setUploadedAddrFileName(fileName);
-      }
-    }, 1200);
+      markDocUploaded(docType, file.name);
+    };
+    reader.onerror = () => {
+      setIsUploading(null);
+      markDocUploaded(docType, file.name);
+    };
+    reader.readAsDataURL(file);
   };
 
   // Camera capture handler — routes to doc upload or CV OCR simulation
@@ -480,7 +553,7 @@ SKILLS:
         CV_TEMPLATES[Math.floor(Math.random() * CV_TEMPLATES.length)];
       setCvText(randomTemplate.text);
     } else {
-      simulateUpload(cameraDocType, fileName);
+      markDocUploaded(cameraDocType, fileName);
     }
     setShowCameraScanner(false);
     setCameraDocType(null);
@@ -517,6 +590,30 @@ SKILLS:
       alert("Please upload a .txt or .pdf file.");
     }
     e.target.value = "";
+  };
+
+  // Open document preview modal - tries blob URL first, then falls back to localStorage
+  const openDocPreview = (docType: string, fileName?: string) => {
+    const blobUrl = docBlobUrls[docType];
+    const mime = docMimeTypes[docType];
+    if (blobUrl && mime) {
+      setPreviewDoc({ url: blobUrl, mime, name: fileName || docType });
+      return;
+    }
+    // Try localStorage (dataUrl)
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem(`cp_docpreview_${citizen.idNumber}_${docType}`) ||
+          "null",
+      );
+      if (stored?.dataUrl) {
+        setPreviewDoc({
+          url: stored.dataUrl,
+          mime: stored.mimeType || "",
+          name: stored.fileName || docType,
+        });
+      }
+    } catch {}
   };
 
   // Submit Application
@@ -743,7 +840,7 @@ SKILLS:
             <button
               id="citizen-logout-btn"
               onClick={onLogout}
-              className="flex items-center space-x-1.5 px-4.5 py-2.5 border border-slate-700 hover:bg-slate-800 rounded-xl text-xs font-bold uppercase tracking-wider transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-4.5 py-2.5 border border-white-700  bg-[#ef4444] rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
               <LogOut size={13} />
               <span>{t("nav.sign_out")}</span>
@@ -963,8 +1060,8 @@ SKILLS:
                         >
                           <span>
                             {alreadyApplied
-                              ? "Tracking Progress"
-                              : "View & Apply"}
+                              ? t("common.track_progress")
+                              : t("common.view_and_apply")}
                           </span>
                           <ArrowRight size={13} className="ml-1" />
                         </button>
@@ -1022,8 +1119,7 @@ SKILLS:
                       <div className="bg-indigo-50 border-b border-indigo-100 py-3 px-6 flex justify-between text-xs font-bold text-indigo-700">
                         {applyWizardStep === 4 ? (
                           <span className="text-emerald-800 flex items-center justify-center gap-1.5 font-extrabold uppercase text-center w-full">
-                            ✨ South African Public Service (SAPS) Placement
-                            Registered Successfully!
+                            ✨ {t("wizard.submitted")}
                           </span>
                         ) : (
                           <>
@@ -1034,7 +1130,7 @@ SKILLS:
                                   : ""
                               }
                             >
-                              1. Portfolio Specs
+                              1. {t("wizard.verify_credentials")}
                             </span>
                             <span
                               className={
@@ -1043,7 +1139,7 @@ SKILLS:
                                   : ""
                               }
                             >
-                              2. Supplementary Toggles
+                              2. {t("wizard.docs_checklist")}
                             </span>
                             <span
                               className={
@@ -1052,7 +1148,7 @@ SKILLS:
                                   : ""
                               }
                             >
-                              3. Verify & Apply
+                              3. {t("wizard.review_submit")}
                             </span>
                           </>
                         )}
@@ -1136,7 +1232,7 @@ SKILLS:
                                 disabled
                                 className="px-6 py-2.5 bg-slate-100 text-slate-400 rounded-xl text-xs font-bold"
                               >
-                                ✓ Already Applied for Clearance
+                                {t("wizard.already_applied")}
                               </button>
                             ) : (
                               <button
@@ -1144,7 +1240,7 @@ SKILLS:
                                 onClick={() => setShowApplyModal(true)}
                                 className="px-6 py-2.5 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-xs font-bold shadow-md hover:shadow-lg transition-all cursor-pointer"
                               >
-                                Launch Clearance Portal
+                                {t("wizard.launch_portal")}
                               </button>
                             )}
                           </div>
@@ -1159,7 +1255,7 @@ SKILLS:
                               id="wizard-step-1"
                             >
                               <h4 className="font-bold text-slate-900 text-sm">
-                                Verify Personal Credentials
+                                {t("wizard.verify_credentials")}
                               </h4>
                               <p className="text-slate-450 leading-relaxed font-semibold">
                                 Basic names and identity credentials are loaded
@@ -1245,7 +1341,7 @@ SKILLS:
                                         </label>
                                         <label className="text-[9px] font-bold text-indigo-700 bg-white hover:bg-indigo-50 border border-indigo-200 px-2 py-1 rounded-lg cursor-pointer flex items-center gap-1 transition-all">
                                           <UploadCloud size={10} />
-                                          Upload .txt / PDF
+                                          {t("action.upload")} .txt / PDF
                                           <input
                                             type="file"
                                             accept=".txt,.pdf"
@@ -1368,7 +1464,7 @@ SKILLS:
                               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>
                                   <label className="block text-slate-500 font-semibold mb-1">
-                                    Full Names (Verified ID)
+                                    {t("wizard.full_name_field")}
                                   </label>
                                   <input
                                     type="text"
@@ -1379,7 +1475,7 @@ SKILLS:
                                 </div>
                                 <div>
                                   <label className="block text-slate-500 font-semibold mb-1">
-                                    ID Number (Verified ID)
+                                    {t("wizard.id_number_field")}
                                   </label>
                                   <input
                                     type="text"
@@ -1390,7 +1486,7 @@ SKILLS:
                                 </div>
                                 <div>
                                   <label className="block text-slate-500 font-semibold mb-1">
-                                    Mobile Contact Phone *
+                                    {t("wizard.phone_field")} *
                                   </label>
                                   <input
                                     id="wizard-phone"
@@ -1406,7 +1502,7 @@ SKILLS:
                                 </div>
                                 <div>
                                   <label className="block text-slate-500 font-semibold mb-1">
-                                    Email Mailbox *
+                                    {t("wizard.email_field")} *
                                   </label>
                                   <input
                                     id="wizard-email"
@@ -1422,7 +1518,7 @@ SKILLS:
                                 </div>
                                 <div className="md:col-span-2">
                                   <label className="block text-slate-500 font-semibold mb-1">
-                                    Highest Academic Qualification Cleared
+                                    {t("wizard.education_field")}
                                   </label>
                                   <select
                                     id="wizard-education"
@@ -1465,7 +1561,7 @@ SKILLS:
                                   }}
                                   className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
                                 >
-                                  Next: Upload Credentials
+                                  {t("wizard.next_upload")}
                                 </button>
                               </div>
                             </div>
@@ -1478,7 +1574,7 @@ SKILLS:
                               id="wizard-step-2"
                             >
                               <h4 className="font-bold text-slate-900 text-sm font-sans">
-                                Supplementary Files Checklist
+                                {t("wizard.docs_checklist")}
                               </h4>
                               <p className="text-slate-450 leading-relaxed">
                                 Upload digital PDF or image scans of your
@@ -1491,24 +1587,38 @@ SKILLS:
                                 <div className="p-3.5 bg-slate-50 border border-slate-250 rounded-xl flex items-center justify-between">
                                   <div>
                                     <h5 className="font-bold text-slate-800">
-                                      Copy of National ID Card *
+                                      {t("wizard.id_doc_name")} *
                                     </h5>
                                     <p className="text-[10px] text-slate-400 mt-0.5">
-                                      Mandatory for authentication checks.
+                                      {t("wizard.mandatory_note")}
                                     </p>
                                   </div>
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center gap-1.5">
                                     {uploadedId ? (
-                                      <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded">
-                                        ✓ Uploaded
-                                      </span>
+                                      <>
+                                        <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded text-xs">
+                                          ✓ {t("wizard.uploaded")}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            openDocPreview(
+                                              "id",
+                                              uploadedIdFileName || undefined,
+                                            )
+                                          }
+                                          className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-all cursor-pointer"
+                                        >
+                                          <Eye size={11} /> {t("docs.view_doc")}
+                                        </button>
+                                      </>
                                     ) : (
                                       <label
                                         className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg font-bold hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
                                       >
                                         {isUploading === "id"
-                                          ? "Processing..."
-                                          : "Upload File"}
+                                          ? t("common.processing")
+                                          : t("wizard.upload_file")}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1516,7 +1626,9 @@ SKILLS:
                                           disabled={isUploading !== null}
                                           onChange={(e) => {
                                             const f = e.target.files?.[0];
-                                            if (f) simulateUpload("id", f.name);
+                                            if (f) {
+                                              uploadDocument("id", f);
+                                            }
                                             e.target.value = "";
                                           }}
                                         />
@@ -1529,25 +1641,38 @@ SKILLS:
                                 <div className="p-3.5 bg-slate-50 border border-slate-250 rounded-xl flex items-center justify-between">
                                   <div>
                                     <h5 className="font-bold text-slate-800">
-                                      Curriculum Vitae (CV) Profile *
+                                      {t("wizard.cv_doc_name")} *
                                     </h5>
                                     <p className="text-[10px] text-slate-400 mt-0.5">
-                                      Details previous working and vocational
-                                      projects.
+                                      {t("wizard.cv_note")}
                                     </p>
                                   </div>
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center gap-1.5">
                                     {uploadedCv ? (
-                                      <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded">
-                                        ✓ Uploaded
-                                      </span>
+                                      <>
+                                        <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded text-xs">
+                                          ✓ {t("wizard.uploaded")}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            openDocPreview(
+                                              "cv",
+                                              uploadedCvFileName || undefined,
+                                            )
+                                          }
+                                          className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-all cursor-pointer"
+                                        >
+                                          <Eye size={11} /> {t("docs.view_doc")}
+                                        </button>
+                                      </>
                                     ) : (
                                       <label
                                         className={`px-3 py-1.5 bg-blue-55 text-blue-700 rounded-lg font-bold hover:bg-blue-100 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
                                       >
                                         {isUploading === "cv"
-                                          ? "Processing..."
-                                          : "Upload File"}
+                                          ? t("common.processing")
+                                          : t("wizard.upload_file")}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1555,7 +1680,9 @@ SKILLS:
                                           disabled={isUploading !== null}
                                           onChange={(e) => {
                                             const f = e.target.files?.[0];
-                                            if (f) simulateUpload("cv", f.name);
+                                            if (f) {
+                                              uploadDocument("cv", f);
+                                            }
                                             e.target.value = "";
                                           }}
                                         />
@@ -1568,24 +1695,39 @@ SKILLS:
                                 <div className="p-3.5 bg-slate-50 border border-slate-250 rounded-xl flex items-center justify-between">
                                   <div>
                                     <h5 className="font-bold text-slate-800">
-                                      Academic / Technical Qualifications
+                                      {t("wizard.quals_doc_name")}
                                     </h5>
                                     <p className="text-[10px] text-slate-400 mt-0.5">
-                                      Attach degrees, certificates or diplomas.
+                                      {t("wizard.quals_note")}
                                     </p>
                                   </div>
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center gap-1.5">
                                     {uploadedQuails ? (
-                                      <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded">
-                                        ✓ Uploaded
-                                      </span>
+                                      <>
+                                        <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded text-xs">
+                                          ✓ {t("wizard.uploaded")}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            openDocPreview(
+                                              "qualifications",
+                                              uploadedQuailsFileName ||
+                                                undefined,
+                                            )
+                                          }
+                                          className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-all cursor-pointer"
+                                        >
+                                          <Eye size={11} /> {t("docs.view_doc")}
+                                        </button>
+                                      </>
                                     ) : (
                                       <label
                                         className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
                                       >
                                         {isUploading === "qualifications"
-                                          ? "Processing..."
-                                          : "Upload File"}
+                                          ? t("common.processing")
+                                          : t("wizard.upload_file")}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1594,9 +1736,9 @@ SKILLS:
                                           onChange={(e) => {
                                             const f = e.target.files?.[0];
                                             if (f)
-                                              simulateUpload(
+                                              uploadDocument(
                                                 "qualifications",
-                                                f.name,
+                                                f,
                                               );
                                             e.target.value = "";
                                           }}
@@ -1610,25 +1752,38 @@ SKILLS:
                                 <div className="p-3.5 bg-slate-50 border border-slate-250 rounded-xl flex items-center justify-between">
                                   <div>
                                     <h5 className="font-bold text-slate-800">
-                                      Local Proof of Address Checklist
+                                      {t("wizard.addr_doc_name")}
                                     </h5>
                                     <p className="text-[10px] text-slate-400 mt-0.5">
-                                      Utility bill, bank clearance, or landlord
-                                      letter.
+                                      {t("wizard.addr_note")}
                                     </p>
                                   </div>
-                                  <div className="flex items-center space-x-2">
+                                  <div className="flex items-center gap-1.5">
                                     {uploadedAddr ? (
-                                      <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded">
-                                        ✓ Uploaded
-                                      </span>
+                                      <>
+                                        <span className="text-emerald-700 font-bold flex items-center bg-emerald-50 px-2 py-1 rounded text-xs">
+                                          ✓ {t("wizard.uploaded")}
+                                        </span>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            openDocPreview(
+                                              "address",
+                                              uploadedAddrFileName || undefined,
+                                            )
+                                          }
+                                          className="flex items-center gap-1 px-2 py-1 text-xs font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded transition-all cursor-pointer"
+                                        >
+                                          <Eye size={11} /> {t("docs.view_doc")}
+                                        </button>
+                                      </>
                                     ) : (
                                       <label
                                         className={`px-3 py-1.5 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-all cursor-pointer ${isUploading !== null ? "opacity-50 pointer-events-none" : ""}`}
                                       >
                                         {isUploading === "address"
-                                          ? "Processing..."
-                                          : "Upload File"}
+                                          ? t("common.processing")
+                                          : t("wizard.upload_file")}
                                         <input
                                           type="file"
                                           accept=".pdf,.jpg,.jpeg,.png"
@@ -1636,8 +1791,7 @@ SKILLS:
                                           disabled={isUploading !== null}
                                           onChange={(e) => {
                                             const f = e.target.files?.[0];
-                                            if (f)
-                                              simulateUpload("address", f.name);
+                                            if (f) uploadDocument("address", f);
                                             e.target.value = "";
                                           }}
                                         />
@@ -1668,7 +1822,7 @@ SKILLS:
                                   }}
                                   className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 font-semibold"
                                 >
-                                  Next: Review Profile
+                                  {t("wizard.next_review")}
                                 </button>
                               </div>
                             </div>
@@ -1681,7 +1835,7 @@ SKILLS:
                               id="wizard-step-3"
                             >
                               <h4 className="font-bold text-slate-900 text-sm">
-                                Review & Finalize Submission
+                                {t("wizard.review_submit")}
                               </h4>
                               <p className="text-slate-450 leading-relaxed">
                                 Review your verified profiles details. Confirm
@@ -1917,7 +2071,7 @@ SKILLS:
                                   }}
                                   className="w-full sm:w-auto px-6 py-2.5 bg-slate-905 hover:bg-slate-900 text-white font-black text-xs uppercase tracking-wider rounded-xl transition-all shadow-md text-center cursor-pointer flex items-center justify-center gap-1.5"
                                 >
-                                  Acknowledge & Track Application
+                                  {t("wizard.acknowledge")}
                                   <ArrowRight size={13} />
                                 </button>
                               </div>
@@ -1940,7 +2094,7 @@ SKILLS:
               {/* Left column: submissions history */}
               <div className="lg:col-span-1 bg-white rounded-2xl border border-slate-150 p-4 space-y-3.5 max-h-125 overflow-y-auto">
                 <span className="text-xs font-bold text-slate-400 uppercase tracking-widest block mb-2">
-                  My Submissions Portal
+                  {t("tracker.my_submissions")}
                 </span>
 
                 {myApplications.length === 0 ? (
@@ -1949,8 +2103,7 @@ SKILLS:
                       className="mx-auto mb-2 opacity-30 text-slate-400"
                       size={28}
                     />
-                    You haven't applied for any placement channels yet. Check
-                    the vacancies tab to launch one!
+                    {t("tracker.empty_msg")}
                   </div>
                 ) : (
                   myApplications.map((app) => {
@@ -2409,12 +2562,12 @@ SKILLS:
                 {t("docs.vault_title")}
               </h3>
               <p className="text-xs text-slate-400">
-                Manage uploaded scans to pre-qualify automatically across
-                published civil opportunities.
+                {t("docs.vault_subtitle")}
               </p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* ID Card */}
               <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start">
@@ -2422,23 +2575,91 @@ SKILLS:
                       <FileText size={18} />
                     </div>
                     <span className="bg-emerald-50 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded uppercase">
-                      ID Active
+                      {t("docs.id_status_active")}
                     </span>
                   </div>
                   <h4 className="text-sm font-black text-slate-900 mt-4">
-                    Verified National ID Copy
+                    {t("docs.vault_id_title")}
                   </h4>
                   <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
-                    Identity credentials copy pre-registered during portal
-                    signup. Essential to avoid duplicate logins.
+                    {t("wizard.mandatory_note")}
                   </p>
+                  {/* Preview area */}
+                  {(() => {
+                    const stored = (() => {
+                      try {
+                        return JSON.parse(
+                          localStorage.getItem(
+                            `cp_docpreview_${citizen.idNumber}_id`,
+                          ) || "null",
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })();
+                    if (!stored && !docBlobUrls.id) return null;
+                    const url = docBlobUrls.id || stored?.dataUrl;
+                    const mime = docMimeTypes.id || stored?.mimeType || "";
+                    const name =
+                      uploadedIdFileName || stored?.fileName || "ID Document";
+                    return (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                        {mime.startsWith("image/") ? (
+                          <img
+                            src={url}
+                            alt="ID preview"
+                            className="w-full max-h-40 object-contain"
+                          />
+                        ) : (
+                          <iframe
+                            src={url}
+                            title="ID Document"
+                            className="w-full h-40"
+                          />
+                        )}
+                        <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-white">
+                          <span className="text-[10px] font-mono text-slate-500 truncate">
+                            {name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc({ url, mime, name })}
+                            className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800"
+                          >
+                            <Eye size={12} /> {t("docs.view_doc")}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
-                <div className="pt-4 mt-4 border-t border-slate-100 text-xs text-slate-400">
-                  Last Updated:{" "}
-                  <span className="font-mono">Current Session</span>
+                <div className="pt-4 mt-4 border-t border-slate-100 text-xs text-slate-400 flex items-center justify-between">
+                  <span>
+                    {uploadedIdFileName ? (
+                      <span className="font-mono truncate">
+                        {uploadedIdFileName}
+                      </span>
+                    ) : (
+                      <span>{t("docs.vault_subtitle")}</span>
+                    )}
+                  </span>
+                  <label className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 font-bold cursor-pointer transition-all">
+                    <UploadCloud size={11} /> {t("action.upload")}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadDocument("id", f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
 
+              {/* CV */}
               <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs flex flex-col justify-between">
                 <div>
                   <div className="flex justify-between items-start">
@@ -2453,61 +2674,267 @@ SKILLS:
                       }`}
                     >
                       {citizen.skills && citizen.skills.length > 0
-                        ? "CV ACTIVE"
-                        : "MISSING CV"}
+                        ? t("docs.cv_status_active")
+                        : t("docs.cv_status_missing")}
                     </span>
                   </div>
                   <h4 className="text-sm font-black text-slate-900 mt-4 font-sans">
-                    Curriculum Vitae (CV) Profile
+                    {t("docs.vault_cv_title")}
                   </h4>
                   <p className="text-xs text-slate-500 mt-1.5 leading-relaxed font-sans">
-                    Detailed breakdown of your competencies, trade experience,
-                    and previous project assignments.
+                    {t("wizard.cv_note")}
                   </p>
+                  {/* CV file preview */}
+                  {(() => {
+                    const stored = (() => {
+                      try {
+                        return JSON.parse(
+                          localStorage.getItem(
+                            `cp_docpreview_${citizen.idNumber}_cv`,
+                          ) || "null",
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })();
+                    if (!stored && !docBlobUrls.cv) return null;
+                    const url = docBlobUrls.cv || stored?.dataUrl;
+                    const mime = docMimeTypes.cv || stored?.mimeType || "";
+                    const name = uploadedCvFileName || stored?.fileName || "CV";
+                    return (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                        {mime.startsWith("image/") ? (
+                          <img
+                            src={url}
+                            alt="CV preview"
+                            className="w-full max-h-40 object-contain"
+                          />
+                        ) : (
+                          <iframe
+                            src={url}
+                            title="CV Document"
+                            className="w-full h-40"
+                          />
+                        )}
+                        <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-white">
+                          <span className="text-[10px] font-mono text-slate-500 truncate">
+                            {name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc({ url, mime, name })}
+                            className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800"
+                          >
+                            <Eye size={12} /> {t("docs.view_doc")}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center text-xs">
                   <span className="text-slate-400">
-                    Status:{" "}
-                    {citizen.skills && citizen.skills.length > 0
-                      ? "Ready"
-                      : "Not Loaded"}
+                    {uploadedCvFileName ||
+                      (citizen.skills && citizen.skills.length > 0
+                        ? t("docs.cv_status_active")
+                        : t("docs.cv_status_missing"))}
                   </span>
-                  {!(citizen.skills && citizen.skills.length > 0) && (
-                    <button
-                      id="vault-simulate-cv"
-                      onClick={() => {
-                        const updated = allCitizens.map((cit) => {
-                          if (cit.idNumber === citizen.idNumber) {
-                            return {
-                              ...cit,
-                              skills: [
-                                "Communication",
-                                "Microsoft Excel",
-                                "General Services",
-                              ],
-                            };
-                          }
-                          return cit;
-                        });
-                        setAllCitizens(updated);
-                        localStorage.setItem(
-                          "cp_citizens",
-                          JSON.stringify(updated),
-                        );
-                        citizen.skills = [
-                          "Communication",
-                          "Microsoft Excel",
-                          "General Services",
-                        ];
-                        alert(
-                          "Your CV mock is updated with core skills and synced to local storage!",
-                        );
+                  <label className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 font-bold cursor-pointer transition-all">
+                    <UploadCloud size={11} /> {t("action.upload")}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadDocument("cv", f);
+                        e.target.value = "";
                       }}
-                      className="px-2.5 py-1 bg-blue-50 text-blue-700 font-bold rounded hover:bg-blue-100"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Qualifications */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div className="p-2.5 bg-slate-50 text-slate-700 rounded-lg">
+                      <FileText size={18} />
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${uploadedQuails ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-500"}`}
                     >
-                      Process Standard CV
-                    </button>
-                  )}
+                      {uploadedQuails
+                        ? t("wizard.uploaded")
+                        : t("docs.qualifications")}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900 mt-4">
+                    {t("docs.qualifications")}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    {t("wizard.quals_note")}
+                  </p>
+                  {(() => {
+                    const stored = (() => {
+                      try {
+                        return JSON.parse(
+                          localStorage.getItem(
+                            `cp_docpreview_${citizen.idNumber}_qualifications`,
+                          ) || "null",
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })();
+                    if (!stored && !docBlobUrls.qualifications) return null;
+                    const url = docBlobUrls.qualifications || stored?.dataUrl;
+                    const mime =
+                      docMimeTypes.qualifications || stored?.mimeType || "";
+                    const name =
+                      uploadedQuailsFileName ||
+                      stored?.fileName ||
+                      "Qualifications";
+                    return (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                        {mime.startsWith("image/") ? (
+                          <img
+                            src={url}
+                            alt="Qualifications"
+                            className="w-full max-h-40 object-contain"
+                          />
+                        ) : (
+                          <iframe
+                            src={url}
+                            title="Qualifications"
+                            className="w-full h-40"
+                          />
+                        )}
+                        <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-white">
+                          <span className="text-[10px] font-mono text-slate-500 truncate">
+                            {name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc({ url, mime, name })}
+                            className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800"
+                          >
+                            <Eye size={12} /> {t("docs.view_doc")}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div className="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center text-xs">
+                  <span className="text-slate-400">
+                    {uploadedQuailsFileName || t("wizard.quals_doc_name")}
+                  </span>
+                  <label className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 font-bold cursor-pointer transition-all">
+                    <UploadCloud size={11} /> {t("action.upload")}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadDocument("qualifications", f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                </div>
+              </div>
+
+              {/* Proof of Address */}
+              <div className="bg-white p-5 rounded-2xl border border-slate-150 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start">
+                    <div className="p-2.5 bg-slate-50 text-slate-700 rounded-lg">
+                      <FileText size={18} />
+                    </div>
+                    <span
+                      className={`text-[10px] font-bold px-2 py-0.5 rounded uppercase ${uploadedAddr || citizen.proofOfAddressUploaded ? "bg-emerald-50 text-emerald-800" : "bg-slate-100 text-slate-500"}`}
+                    >
+                      {uploadedAddr || citizen.proofOfAddressUploaded
+                        ? t("wizard.uploaded")
+                        : t("docs.proof_of_address")}
+                    </span>
+                  </div>
+                  <h4 className="text-sm font-black text-slate-900 mt-4">
+                    {t("docs.proof_of_address")}
+                  </h4>
+                  <p className="text-xs text-slate-500 mt-1.5 leading-relaxed">
+                    {t("wizard.addr_note")}
+                  </p>
+                  {(() => {
+                    const stored = (() => {
+                      try {
+                        return JSON.parse(
+                          localStorage.getItem(
+                            `cp_docpreview_${citizen.idNumber}_address`,
+                          ) || "null",
+                        );
+                      } catch {
+                        return null;
+                      }
+                    })();
+                    if (!stored && !docBlobUrls.address) return null;
+                    const url = docBlobUrls.address || stored?.dataUrl;
+                    const mime = docMimeTypes.address || stored?.mimeType || "";
+                    const name =
+                      uploadedAddrFileName ||
+                      stored?.fileName ||
+                      "Proof of Address";
+                    return (
+                      <div className="mt-3 rounded-xl overflow-hidden border border-slate-200 bg-slate-50">
+                        {mime.startsWith("image/") ? (
+                          <img
+                            src={url}
+                            alt="Proof of Address"
+                            className="w-full max-h-40 object-contain"
+                          />
+                        ) : (
+                          <iframe
+                            src={url}
+                            title="Proof of Address"
+                            className="w-full h-40"
+                          />
+                        )}
+                        <div className="flex items-center justify-between px-3 py-2 border-t border-slate-100 bg-white">
+                          <span className="text-[10px] font-mono text-slate-500 truncate">
+                            {name}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => setPreviewDoc({ url, mime, name })}
+                            className="flex items-center gap-1 text-xs font-bold text-blue-600 hover:text-blue-800"
+                          >
+                            <Eye size={12} /> {t("docs.view_doc")}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+                <div className="pt-4 mt-4 border-t border-slate-100 flex justify-between items-center text-xs">
+                  <span className="text-slate-400">
+                    {uploadedAddrFileName || t("wizard.addr_doc_name")}
+                  </span>
+                  <label className="flex items-center gap-1 px-2 py-1 bg-slate-100 hover:bg-slate-200 rounded text-slate-600 font-bold cursor-pointer transition-all">
+                    <UploadCloud size={11} /> {t("action.upload")}
+                    <input
+                      type="file"
+                      accept=".pdf,.jpg,.jpeg,.png"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) uploadDocument("address", f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
                 </div>
               </div>
             </div>
@@ -2552,7 +2979,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Full Name
+                    {t("profile.full_name")}
                   </label>
                   <div
                     className={`px-3 py-2 rounded-xl text-sm font-semibold border ${isHigh ? "bg-slate-900 border-slate-700 text-slate-300" : "bg-slate-50 border-slate-150 text-slate-700"}`}
@@ -2560,8 +2987,7 @@ SKILLS:
                     {citizen.fullName}
                   </div>
                   <p className="text-[10px] text-slate-400 mt-0.5">
-                    Name is linked to your National ID and cannot be changed
-                    here.
+                    {t("profile.name_locked")}
                   </p>
                 </div>
 
@@ -2570,7 +2996,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Email Address
+                    {t("profile.email_label")}
                   </label>
                   <div className="relative">
                     <Mail
@@ -2592,7 +3018,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Phone Number
+                    {t("profile.phone_label")}
                   </label>
                   <div className="relative">
                     <Phone
@@ -2614,7 +3040,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Current Occupation / Employment Status
+                    {t("profile.occupation_label")}
                   </label>
                   <select
                     value={profileOccupation}
@@ -2645,7 +3071,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Highest Education Level
+                    {t("profile.education_label")}
                   </label>
                   <select
                     value={citizenEducation}
@@ -2685,7 +3111,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Residential Address
+                    {t("profile.residential_addr")}
                   </label>
                   {/* <textarea
                     rows={3}
@@ -2721,7 +3147,9 @@ SKILLS:
                         className="shrink-0 text-emerald-500"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-extrabold">Document on file</p>
+                        <p className="font-extrabold">
+                          {t("profile.proof_on_file")}
+                        </p>
                         {profileProofFileName && (
                           <p className="truncate text-[10px] font-mono opacity-70">
                             {profileProofFileName}
@@ -2772,7 +3200,7 @@ SKILLS:
                   <label
                     className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
                   >
-                    Skills on File
+                    {t("profile.skills_title")}
                   </label>
                   {citizenSkillsSelected.length > 0 ? (
                     <div className="flex flex-wrap gap-1.5">
@@ -2830,6 +3258,271 @@ SKILLS:
               </div>
             </div>
 
+            {/* ── Work Experience ── */}
+            <div
+              className={`p-6 rounded-2xl border space-y-4 ${isHigh ? "bg-black border-slate-700" : "bg-white border-slate-150 shadow-xs"}`}
+            >
+              <div className="flex items-center justify-between">
+                <h4
+                  className={`text-xs font-black uppercase tracking-widest flex items-center gap-1.5 ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
+                >
+                  <Briefcase size={14} /> {t("profile.work_exp_title")}
+                </h4>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingExp(emptyExp());
+                    setEditingExpIndex(null);
+                  }}
+                  className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold rounded-lg"
+                >
+                  + {t("profile.add_position")}
+                </button>
+              </div>
+
+              {workExperiences.length === 0 && editingExp === null && (
+                <p className="text-xs text-slate-400 italic">
+                  {t("profile.no_work_exp")}
+                </p>
+              )}
+
+              {/* Existing entries */}
+              <div className="space-y-3">
+                {workExperiences.map((exp, idx) => (
+                  <div
+                    key={idx}
+                    className={`p-3.5 rounded-xl border text-xs ${isHigh ? "bg-slate-900 border-slate-700" : "bg-slate-50 border-slate-200"}`}
+                  >
+                    {editingExpIndex === idx && editingExp ? (
+                      <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
+                          <input
+                            placeholder="Job Title"
+                            value={editingExp.jobTitle}
+                            onChange={(e) =>
+                              setEditingExp({
+                                ...editingExp,
+                                jobTitle: e.target.value,
+                              })
+                            }
+                            className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200"}`}
+                          />
+                          <input
+                            placeholder="Employer"
+                            value={editingExp.employer}
+                            onChange={(e) =>
+                              setEditingExp({
+                                ...editingExp,
+                                employer: e.target.value,
+                              })
+                            }
+                            className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200"}`}
+                          />
+                          <input
+                            placeholder="Start Date (e.g. Jan 2022)"
+                            value={editingExp.startDate}
+                            onChange={(e) =>
+                              setEditingExp({
+                                ...editingExp,
+                                startDate: e.target.value,
+                              })
+                            }
+                            className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200"}`}
+                          />
+                          <input
+                            placeholder='End Date or "Present"'
+                            value={editingExp.endDate}
+                            onChange={(e) =>
+                              setEditingExp({
+                                ...editingExp,
+                                endDate: e.target.value,
+                              })
+                            }
+                            className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200"}`}
+                          />
+                        </div>
+                        <textarea
+                          rows={2}
+                          placeholder="Brief description of responsibilities..."
+                          value={editingExp.description}
+                          onChange={(e) =>
+                            setEditingExp({
+                              ...editingExp,
+                              description: e.target.value,
+                            })
+                          }
+                          className={`w-full px-2.5 py-1.5 border rounded-lg text-xs resize-none ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200"}`}
+                        />
+                        <div className="flex gap-2 justify-end">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingExp(null);
+                              setEditingExpIndex(null);
+                            }}
+                            className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const updated = [...workExperiences];
+                              updated[idx] = editingExp;
+                              setWorkExperiences(updated);
+                              setEditingExp(null);
+                              setEditingExpIndex(null);
+                            }}
+                            className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between items-start gap-2">
+                        <div>
+                          <p
+                            className={`font-bold ${isHigh ? "text-white" : "text-slate-900"}`}
+                          >
+                            {exp.jobTitle}
+                          </p>
+                          <p
+                            className={`font-semibold mt-0.5 ${isHigh ? "text-slate-400" : "text-slate-500"}`}
+                          >
+                            {exp.employer} &bull; {exp.startDate} –{" "}
+                            {exp.endDate}
+                          </p>
+                          {exp.description && (
+                            <p
+                              className={`mt-1 leading-relaxed ${isHigh ? "text-slate-400" : "text-slate-600"}`}
+                            >
+                              {exp.description}
+                            </p>
+                          )}
+                        </div>
+                        <div className="flex gap-1.5 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingExp({ ...exp });
+                              setEditingExpIndex(idx);
+                            }}
+                            className="px-2 py-1 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded text-[10px] font-bold"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setWorkExperiences(
+                                workExperiences.filter((_, i) => i !== idx),
+                              )
+                            }
+                            className="px-2 py-1 bg-red-50 hover:bg-red-100 text-red-600 rounded text-[10px] font-bold"
+                          >
+                            Remove
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
+              {/* New entry form */}
+              {editingExp !== null && editingExpIndex === null && (
+                <div
+                  className={`p-3.5 rounded-xl border space-y-2 text-xs ${isHigh ? "bg-slate-900 border-coct-yellow" : "bg-indigo-50 border-indigo-200"}`}
+                >
+                  <p
+                    className={`font-bold text-[10px] uppercase tracking-widest ${isHigh ? "text-coct-yellow" : "text-indigo-700"}`}
+                  >
+                    New Position
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <input
+                      placeholder="Job Title"
+                      value={editingExp.jobTitle}
+                      onChange={(e) =>
+                        setEditingExp({
+                          ...editingExp,
+                          jobTitle: e.target.value,
+                        })
+                      }
+                      className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200 bg-white"}`}
+                    />
+                    <input
+                      placeholder="Employer"
+                      value={editingExp.employer}
+                      onChange={(e) =>
+                        setEditingExp({
+                          ...editingExp,
+                          employer: e.target.value,
+                        })
+                      }
+                      className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200 bg-white"}`}
+                    />
+                    <input
+                      placeholder="Start Date (e.g. Jan 2022)"
+                      value={editingExp.startDate}
+                      onChange={(e) =>
+                        setEditingExp({
+                          ...editingExp,
+                          startDate: e.target.value,
+                        })
+                      }
+                      className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200 bg-white"}`}
+                    />
+                    <input
+                      placeholder='End Date or "Present"'
+                      value={editingExp.endDate}
+                      onChange={(e) =>
+                        setEditingExp({
+                          ...editingExp,
+                          endDate: e.target.value,
+                        })
+                      }
+                      className={`px-2.5 py-1.5 border rounded-lg text-xs ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200 bg-white"}`}
+                    />
+                  </div>
+                  <textarea
+                    rows={2}
+                    placeholder="Brief description of responsibilities..."
+                    value={editingExp.description}
+                    onChange={(e) =>
+                      setEditingExp({
+                        ...editingExp,
+                        description: e.target.value,
+                      })
+                    }
+                    className={`w-full px-2.5 py-1.5 border rounded-lg text-xs resize-none ${isHigh ? "bg-black text-white border-slate-600" : "border-slate-200 bg-white"}`}
+                  />
+                  <div className="flex gap-2 justify-end">
+                    <button
+                      type="button"
+                      onClick={() => setEditingExp(null)}
+                      className="px-3 py-1 bg-slate-100 text-slate-700 rounded-lg text-xs font-bold"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (!editingExp.jobTitle || !editingExp.employer)
+                          return;
+                        setWorkExperiences([...workExperiences, editingExp]);
+                        setEditingExp(null);
+                      }}
+                      className="px-3 py-1 bg-indigo-600 text-white rounded-lg text-xs font-bold"
+                    >
+                      Add
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* Save Button */}
             <div className="flex justify-end">
               <button
@@ -2850,7 +3543,7 @@ SKILLS:
             <div className="flex justify-between items-center bg-white p-5 rounded-2xl border border-slate-150">
               <div>
                 <h3 className="text-base font-bold text-slate-900">
-                  Communication Desk
+                  {t("notif.desk_title")}
                 </h3>
                 <p className="text-xs text-slate-400 mt-1">
                   Alerts relating to direct selection panels, documents
@@ -2899,7 +3592,7 @@ SKILLS:
                         {n.type === "alert" && (
                           <span className="inline-flex items-center gap-1 bg-rose-100 text-rose-800 text-[9px] font-black uppercase px-2 py-0.5 rounded-full border border-rose-200">
                             <Clock size={10} className="text-rose-600" />
-                            Urgent closing
+                            {t("notif.urgent")}
                           </span>
                         )}
                         <h4
@@ -2933,7 +3626,9 @@ SKILLS:
                             : "text-indigo-700 hover:text-indigo-900 bg-indigo-50 hover:bg-indigo-100 font-bold"
                         }`}
                       >
-                        {n.type === "alert" ? "Apply Now" : "Acknowledge"}
+                        {n.type === "alert"
+                          ? t("notif.apply_now")
+                          : t("notif.acknowledge")}
                       </button>
                     )}
                   </div>
@@ -2943,6 +3638,87 @@ SKILLS:
           </div>
         )}
       </main>
+
+      {/* ==================== DOCUMENT PREVIEW MODAL ==================== */}
+      <AnimatePresence>
+        {previewDoc && (
+          <motion.div
+            key="doc-preview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+            onClick={() => setPreviewDoc(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-2xl overflow-hidden shadow-2xl w-full max-w-4xl flex flex-col"
+              style={{ maxHeight: "92vh" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Header */}
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Eye size={16} className="text-indigo-600" />
+                  <span className="font-bold text-slate-800 text-sm">
+                    {t("docs.preview_title")}
+                  </span>
+                  <span className="font-mono text-xs text-slate-500 truncate max-w-64">
+                    {previewDoc.name}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              {/* Preview content */}
+              <div className="flex-1 overflow-auto bg-slate-100 flex items-center justify-center min-h-64">
+                {previewDoc.mime.startsWith("image/") ? (
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.name}
+                    className="max-w-full max-h-[78vh] object-contain shadow-md"
+                  />
+                ) : previewDoc.mime === "application/pdf" ||
+                  previewDoc.url.includes("pdf") ? (
+                  <iframe
+                    src={previewDoc.url}
+                    title={previewDoc.name}
+                    className="w-full"
+                    style={{ height: "78vh" }}
+                  />
+                ) : (
+                  <div className="text-center p-8 text-slate-400 text-sm font-medium">
+                    <FileText
+                      size={48}
+                      className="mx-auto mb-3 text-slate-300"
+                    />
+                    <p>{t("docs.no_preview")}</p>
+                    <p className="text-xs mt-1 font-mono">{previewDoc.name}</p>
+                  </div>
+                )}
+              </div>
+              {/* Footer */}
+              <div className="shrink-0 flex justify-end px-5 py-3 border-t border-slate-200 bg-slate-50">
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl transition-all"
+                >
+                  {t("docs.close_preview")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* printable placement letter simulation dialog */}
       <AnimatePresence>

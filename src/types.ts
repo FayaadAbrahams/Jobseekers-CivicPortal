@@ -13,6 +13,14 @@ export interface Job {
   targetAudience: string; // e.g., "Open to All", "Youth Priority", "Experienced Professionals"
 }
 
+export interface WorkExperience {
+  jobTitle: string;
+  employer: string;
+  startDate: string;
+  endDate: string; // "Present" or a date string
+  description: string;
+}
+
 export interface Citizen {
   fullName: string;
   idNumber: string;
@@ -26,6 +34,7 @@ export interface Citizen {
   occupation?: string;
   address?: string;
   proofOfAddressUploaded?: boolean;
+  workExperience?: WorkExperience[];
   recoveryAnswers?: {
     q1: string; // Mother's maiden name
     q2: string; // Birthplace

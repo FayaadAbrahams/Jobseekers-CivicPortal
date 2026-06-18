@@ -102,6 +102,11 @@ export default function RoleSelector({
       return;
     }
 
+    if (trimmedId.length !== 13) {
+      setLoginError("ID Number must be exactly 13 digits.");
+      return;
+    }
+
     const citizenList = getLatestCitizens();
     const citizen = citizenList.find((c) => c.idNumber === trimmedId);
 
@@ -157,8 +162,8 @@ export default function RoleSelector({
     //   return;
     // }
 
-    if (trimmedId.length < 6 || trimmedId.length > 15) {
-      setLoginError("ID Number must be between 6 and 15 characters.");
+    if (trimmedId.length !== 13) {
+      setLoginError("ID Number must be exactly 13 digits.");
       return;
     }
 
@@ -356,7 +361,7 @@ export default function RoleSelector({
           className={`mt-4 inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
             isHigh
               ? "bg-coct-yellow/10 text-coct-yellow border border-coct-yellow/40 hover:bg-coct-yellow/20"
-              : "bg-white/10 text-white border border-white/20 hover:bg-white/20"
+              : "bg-coct-yellow text-black border border-white/20 hover:bg-yellow/20"
           }`}
         >
           <PlayCircle size={14} />
@@ -496,6 +501,7 @@ export default function RoleSelector({
                         name="idnumber"
                         type="text"
                         required
+                        maxLength={13}
                         value={idNumber}
                         onChange={(e) => setIdNumber(e.target.value)}
                         placeholder="e.g. 9504125193084"
@@ -643,9 +649,10 @@ export default function RoleSelector({
                       <input
                         type="text"
                         required
+                        maxLength={13}
                         value={idNumber}
                         onChange={(e) => setIdNumber(e.target.value)}
-                        placeholder="e.g. 9823-55-1011"
+                        placeholder="e.g. 9504125193084"
                         className="block w-full px-3 py-2 border border-slate-200 rounded-xl text-slate-900 font-medium placeholder-slate-400 focus:outline-hidden focus:ring-2 focus:ring-indigo-500 sm:text-xs transition-all"
                       />
                     </div>
@@ -669,7 +676,7 @@ export default function RoleSelector({
                     <label
                       className={`block text-[10px] font-extrabold uppercase tracking-widest mb-1.5 ${isHigh ? "text-coct-yellow" : "text-slate-600"}`}
                     >
-                      Create Portal Password
+                      {t("auth.create_password")}
                     </label>
                     <input
                       type="password"
@@ -692,7 +699,7 @@ export default function RoleSelector({
                     <span
                       className={`block text-[10px] font-extrabold uppercase tracking-wider ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
                     >
-                      Step 2: Employment & Address
+                      {t("auth.step2_heading")}
                     </span>
 
                     {/* Occupation */}
@@ -782,7 +789,7 @@ export default function RoleSelector({
                       <span
                         className={`block text-[10px] font-extrabold uppercase tracking-wider ${isHigh ? "text-coct-yellow" : "text-coct-blue"}`}
                       >
-                        Step 3: Communication Methods
+                        {t("auth.step3_heading")}
                       </span>
                     </div>
                     <p
@@ -850,7 +857,7 @@ export default function RoleSelector({
                           isHigh ? "text-coct-yellow" : "text-coct-blue"
                         }
                       />
-                      Step 4: Account Recovery Safety Settings
+                      {t("auth.step4_heading")}
                     </span>
                     <p
                       className={`text-[10px] leading-normal mb-1 ${isHigh ? "text-slate-300" : "text-slate-400"}`}
@@ -862,7 +869,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-[9px] font-bold text-slate-500 mb-1">
-                        1. What is your mother's maiden name?
+                        {t("auth.q1_label")}
                       </label>
                       <input
                         type="text"
@@ -880,7 +887,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-[9px] font-bold text-slate-500 mb-1">
-                        2. In which city or town were you born?
+                        {t("auth.q2_label")}
                       </label>
                       <input
                         type="text"
@@ -898,7 +905,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-[9px] font-bold text-slate-500 mb-1">
-                        3. What was the name of your first school?
+                        {t("auth.q3_label")}
                       </label>
                       <input
                         type="text"
@@ -1086,7 +1093,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        3. What was the name of your first school?
+                        {t("auth.q3_label")}
                       </label>
                       <input
                         type="text"
@@ -1103,7 +1110,7 @@ export default function RoleSelector({
                     type="submit"
                     className="w-full flex items-center justify-center py-3 px-4 rounded-full text-xs font-black text-white bg-indigo-600 hover:bg-indigo-750 shadow-md transition-all cursor-pointer uppercase tracking-wider"
                   >
-                    Submit Answers
+                    {t("auth.submit_answers")}
                   </button>
 
                   <div className="text-center pt-1">
@@ -1216,7 +1223,7 @@ export default function RoleSelector({
                     }}
                     className="w-full py-2.5 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-all cursor-pointer"
                   >
-                    Return to Portal Entrance
+                    {t("auth.return_portal")}
                   </button>
                 </motion.div>
               )}
@@ -1278,7 +1285,7 @@ export default function RoleSelector({
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50 -mx-6 -mb-8 px-6 py-4 rounded-b-4xl">
                 <span className="font-bold text-slate-500">
-                  Authorized Personnel Only
+                  {t("auth.authorized_only")}
                 </span>
                 <span className="font-extrabold text-slate-800">
                   Gov.Sec V2
@@ -1289,16 +1296,6 @@ export default function RoleSelector({
         </motion.div>
       </div>
 
-      {/* Footer Info */}
-      <div className="sm:mx-auto sm:w-full sm:max-w-md text-center mt-8">
-        <p
-          className={`text-xs leading-relaxed ${isHigh ? "text-slate-400" : "text-white/50"}`}
-        >
-          National Job Placement Clearinghouse &bull; Department of Social
-          Development &bull; All data treated in accordance with National
-          Security Protocols.
-        </p>
-      </div>
     </div>
   );
 }

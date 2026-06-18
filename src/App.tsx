@@ -13,7 +13,20 @@ import CitizenDashboard from "./components/CitizenDashboard";
 import AccessibilityBar from "./components/AccessibilityBar";
 import WhatsAppChatbot from "./components/WhatsAppChatbot";
 import { motion, AnimatePresence } from "motion/react";
-import { LanguageProvider } from "./contexts/LanguageContext";
+import { LanguageProvider, useLanguage } from "./contexts/LanguageContext";
+
+function TranslatedFooter() {
+  const { t } = useLanguage();
+  return (
+    <footer className="bg-coct-magenta border-t border-white/10 text-white/60 py-6 text-center text-xs">
+      <div className="flex justify-center mb-4">
+        <img src={footerCoct} alt="City of Cape Town" className="h-16" />
+      </div>
+      <p className="text-white/80">{t("footer.copyright")}</p>
+    </footer>
+  );
+}
+import footerCoct from "@/assets/imgs/footer-coct.svg";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<{
@@ -160,94 +173,96 @@ export default function App() {
 
   return (
     <LanguageProvider>
-    <div
-      className={`${
-        contrast === "high"
-          ? "contrast-high bg-slate-950 text-white"
-          : "bg-coct-navy text-white"
-      } min-h-screen antialiased transition-all duration-200`}
-      style={{
-        fontFamily: dyslexicFont
-          ? "'Open Dyslexic', 'Space Grotesk', sans-serif"
-          : undefined,
-      }}
-    >
-      <AccessibilityBar
-        fontSize={fontSize}
-        setFontSize={setFontSize}
-        contrast={contrast}
-        setContrast={setContrast}
-        speechEnabled={speechEnabled}
-        setSpeechEnabled={setSpeechEnabled}
-        dyslexicFont={dyslexicFont}
-        setDyslexicFont={setDyslexicFont}
-        transcript={transcript}
-        setTranscript={setTranscript}
-      />
+      <div
+        className={`${
+          contrast === "high"
+            ? "contrast-high bg-slate-950 text-white"
+            : "bg-coct-navy text-white"
+        } min-h-screen antialiased transition-all duration-200`}
+        style={{
+          fontFamily: dyslexicFont
+            ? "'Open Dyslexic', 'Space Grotesk', sans-serif"
+            : undefined,
+        }}
+      >
+        <AccessibilityBar
+          fontSize={fontSize}
+          setFontSize={setFontSize}
+          contrast={contrast}
+          setContrast={setContrast}
+          speechEnabled={speechEnabled}
+          setSpeechEnabled={setSpeechEnabled}
+          dyslexicFont={dyslexicFont}
+          setDyslexicFont={setDyslexicFont}
+          transcript={transcript}
+          setTranscript={setTranscript}
+        />
 
-      {!currentUser && <WhatsAppChatbot contrast={contrast} />}
+        {!currentUser && <WhatsAppChatbot contrast={contrast} />}
 
-      <AnimatePresence mode="wait">
-        {!currentUser ? (
-          <motion.div
-            key="login"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <RoleSelector
-              onLoginCitizen={handleLoginCitizen}
-              onLoginAdmin={handleLoginAdmin}
-              contrast={contrast}
-            />
-          </motion.div>
-        ) : currentUser.role === "admin" ? (
-          <motion.div
-            key="admin"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <AdminDashboard
-              allJobs={allJobs}
-              setAllJobs={setAllJobs}
-              allCitizens={allCitizens}
-              setAllCitizens={setAllCitizens}
-              allApplications={allApplications}
-              setAllApplications={setAllApplications}
-              allInterviews={allInterviews}
-              setAllInterviews={setAllInterviews}
-              onLogout={handleLogout}
-              contrast={contrast}
-            />
-          </motion.div>
-        ) : currentUser.citizen ? (
-          <motion.div
-            key="citizen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-          >
-            <CitizenDashboard
-              citizen={currentUser.citizen}
-              allJobs={allJobs}
-              allApplications={allApplications}
-              setAllApplications={setAllApplications}
-              allInterviews={allInterviews}
-              allNotifications={allNotifications}
-              setAllNotifications={setAllNotifications}
-              onLogout={handleLogout}
-              setAllCitizens={setAllCitizens}
-              allCitizens={allCitizens}
-              contrast={contrast}
-            />
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence mode="wait">
+          {!currentUser ? (
+            <motion.div
+              key="login"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <RoleSelector
+                onLoginCitizen={handleLoginCitizen}
+                onLoginAdmin={handleLoginAdmin}
+                contrast={contrast}
+              />
+            </motion.div>
+          ) : currentUser.role === "admin" ? (
+            <motion.div
+              key="admin"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <AdminDashboard
+                allJobs={allJobs}
+                setAllJobs={setAllJobs}
+                allCitizens={allCitizens}
+                setAllCitizens={setAllCitizens}
+                allApplications={allApplications}
+                setAllApplications={setAllApplications}
+                allInterviews={allInterviews}
+                setAllInterviews={setAllInterviews}
+                onLogout={handleLogout}
+                contrast={contrast}
+              />
+            </motion.div>
+          ) : currentUser.citizen ? (
+            <motion.div
+              key="citizen"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <CitizenDashboard
+                citizen={currentUser.citizen}
+                allJobs={allJobs}
+                allApplications={allApplications}
+                setAllApplications={setAllApplications}
+                allInterviews={allInterviews}
+                allNotifications={allNotifications}
+                setAllNotifications={setAllNotifications}
+                onLogout={handleLogout}
+                setAllCitizens={setAllCitizens}
+                allCitizens={allCitizens}
+                contrast={contrast}
+              />
+            </motion.div>
+          ) : null}
+        </AnimatePresence>
+
+        <TranslatedFooter />
+      </div>
     </LanguageProvider>
   );
 }

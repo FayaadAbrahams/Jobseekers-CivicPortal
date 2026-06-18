@@ -14,9 +14,13 @@ import {
   Play,
   Globe,
 } from "lucide-react";
-import coctLogo from "@/assets/imgs/coct-logo.png";
+import coctLogo from "@/assets/imgs/coct-logo.svg";
 import { useLanguage } from "../contexts/LanguageContext";
-import { LANGUAGE_LABELS, LANGUAGE_NAMES, Language } from "../i18n/translations";
+import {
+  LANGUAGE_LABELS,
+  LANGUAGE_NAMES,
+  Language,
+} from "../i18n/translations";
 
 interface AccessibilityBarProps {
   fontSize: "normal" | "large" | "huge";
@@ -137,7 +141,11 @@ export default function AccessibilityBar({
   const isHigh = contrast === "high";
 
   return (
-    <div className="w-full z-50" id="captionBanner">
+    <div
+      className="w-full z-50"
+      id="captionBanner"
+      style={{ fontSize: "0.625rem" }}
+    >
       {/* Dynamic Subtitles / Transcript Bar at the topmost header */}
       <AnimatePresence>
         {transcript && (
@@ -152,7 +160,7 @@ export default function AccessibilityBar({
             }`}
           >
             <span className="shrink-0 animate-pulse inline-block h-2.5 w-2.5 rounded-full bg-coct-yellow" />
-            <span className="font-mono uppercase tracking-wider text-[10px] shrink-0 font-extrabold">
+            <span className="font-mono uppercase tracking-wider text-[1em] shrink-0 font-extrabold">
               {t("a11y.captions_label")}
             </span>
             <span className="italic truncate max-w-xl font-semibold">
@@ -161,7 +169,7 @@ export default function AccessibilityBar({
             <button
               type="button"
               onClick={() => setTranscript("")}
-              className={`font-bold hover:underline pl-2 text-[10px] ${isHigh ? "text-slate-400 hover:text-white" : "text-red/60 hover:text-black"}`}
+              className={`font-bold hover:underline pl-2 text-[1em] ${isHigh ? "text-slate-400 hover:bg-red-900" : "text-red/60 hover:text-black"}`}
             >
               {t("a11y.captions_clear")}
             </button>
@@ -189,12 +197,13 @@ export default function AccessibilityBar({
                 <span className="font-black text-xs uppercase tracking-widest text-white drop-shadow-xs">
                   {t("brand.city").toUpperCase()}
                 </span>
-                <span className="text-[10px] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
+                <span className="text-[1em] bg-white/20 text-white px-2 py-0.5 rounded-full font-bold">
                   {t("brand.idp")}
                 </span>
               </div>
-              <p className="text-[10px] text-white/90 font-medium leading-none drop-shadow-xs">
-                {t("brand.tagline")} &bull; {t("brand.tagline_af")} &bull; {t("brand.tagline_nl")}
+              <p className="text-[1em] text-white/90 font-medium leading-none drop-shadow-xs">
+                {t("brand.tagline")} &bull; {t("brand.tagline_af")} &bull;{" "}
+                {t("brand.tagline_nl")}
               </p>
             </div>
           </div>
@@ -202,7 +211,7 @@ export default function AccessibilityBar({
           {/* Quick Access Actions */}
           <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
             {/* Visual Indicators Summary */}
-            <span className="text-[10px] font-bold text-white/80 hidden sm:block">
+            <span className="text-[1em] font-bold text-white/80 hidden sm:block">
               {t("a11y.center")}
             </span>
 
@@ -211,7 +220,7 @@ export default function AccessibilityBar({
               <button
                 type="button"
                 onClick={() => handleToggleFont("normal")}
-                className={`px-2 py-1 text-[10px] font-black rounded-lg transition-all ${
+                className={`px-2 py-1 text-[1em] font-black rounded-lg transition-all ${
                   fontSize === "normal"
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-white hover:bg-white/10"
@@ -223,7 +232,7 @@ export default function AccessibilityBar({
               <button
                 type="button"
                 onClick={() => handleToggleFont("large")}
-                className={`px-2 py-1 text-[11px] font-black rounded-lg transition-all ${
+                className={`px-2 py-1 text-[1.1em] font-black rounded-lg transition-all ${
                   fontSize === "large"
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-white hover:bg-white/10"
@@ -235,7 +244,7 @@ export default function AccessibilityBar({
               <button
                 type="button"
                 onClick={() => handleToggleFont("huge")}
-                className={`px-2 py-1 text-[13px] font-black rounded-lg transition-all ${
+                className={`px-2 py-1 text-[1.3em] font-black rounded-lg transition-all ${
                   fontSize === "huge"
                     ? "bg-white text-slate-900 shadow-xs"
                     : "text-white hover:bg-white/10"
@@ -250,7 +259,7 @@ export default function AccessibilityBar({
             <button
               type="button"
               onClick={handleToggleContrast}
-              className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[10px] ${
+              className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[1em] ${
                 isHigh
                   ? "bg-coct-yellow text-black border-white"
                   : "bg-white/15 hover:bg-white/25 text-white border-white/20"
@@ -267,7 +276,7 @@ export default function AccessibilityBar({
             <button
               type="button"
               onClick={handleToggleSpeech}
-              className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[10px] ${
+              className={`p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[1em] ${
                 speechEnabled
                   ? "bg-coct-green/90 text-white border-white animate-pulse"
                   : "bg-white/15 hover:bg-white/25 text-white border-white/20"
@@ -281,11 +290,11 @@ export default function AccessibilityBar({
             </button>
 
             {/* Language Selector */}
-            <div className="relative">
+            <div className="relative" style={{ zIndex: 100 }}>
               <button
                 type="button"
                 onClick={() => setShowLangMenu(!showLangMenu)}
-                className="p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[10px] bg-white/15 hover:bg-white/25 text-white border-white/20"
+                className="p-1.5 rounded-xl border transition-all cursor-pointer flex items-center space-x-1.5 font-bold text-[1em] bg-white/15 hover:bg-white/25 text-white border-white/20"
                 title={t("a11y.language")}
               >
                 <Globe size={13} />
@@ -297,8 +306,11 @@ export default function AccessibilityBar({
                     <button
                       key={lang}
                       type="button"
-                      onClick={() => { setLanguage(lang); setShowLangMenu(false); }}
-                      className={`w-full flex items-center gap-2 px-3 py-2 text-[11px] font-bold transition-all ${
+                      onClick={() => {
+                        setLanguage(lang);
+                        setShowLangMenu(false);
+                      }}
+                      className={`w-full flex items-center gap-2 px-3 py-2 text-[1.1em] font-bold transition-all ${
                         language === lang
                           ? "bg-coct-yellow text-black"
                           : "text-white hover:bg-white/15"
@@ -346,14 +358,14 @@ export default function AccessibilityBar({
                   <Eye size={15} />
                   {t("a11y.visual_section")}
                 </h4>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                <p className="text-[1.1em] text-slate-500 font-medium leading-relaxed">
                   Tailored layout tools designed to support citizens with minor,
                   strong, or complete cataracts, colorblindness, or dyslexia:
                 </p>
                 <div className="space-y-1.5 bg-white p-3 rounded-xl border border-slate-200 dark:bg-black/10 dark:border-slate-800">
                   <div className="flex items-center justify-between">
                     <span className="font-bold">Large Zoom Typography</span>
-                    <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-coct-magenta dark:text-white px-1.5 py-0.5 rounded">
+                    <span className="text-[1em] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-coct-magenta dark:text-white px-1.5 py-0.5 rounded">
                       {fontSize === "normal"
                         ? "100% standard"
                         : fontSize === "large"
@@ -363,7 +375,7 @@ export default function AccessibilityBar({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-bold">Text contrast multiplier</span>
-                    <span className="text-[10px] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-coct-magenta dark:text-white px-1.5 py-0.5 rounded">
+                    <span className="text-[1em] font-mono font-bold bg-slate-100 text-slate-700 dark:bg-coct-magenta dark:text-white px-1.5 py-0.5 rounded">
                       {isHigh ? "7:1 Active Ratio" : "Normal Ratio"}
                     </span>
                   </div>
@@ -378,17 +390,17 @@ export default function AccessibilityBar({
                   <Volume2 size={15} />
                   {t("a11y.auditory_section")}
                 </h4>
-                <p className="text-[11px] text-slate-500 font-medium leading-relaxed">
+                <p className="text-[1.1em] text-slate-500 font-medium leading-relaxed">
                   Support for both visually impaired (audio screen narrative
                   playback) and hearing impaired (full visual subtitles captions
                   framework):
                 </p>
 
                 <div className="p-3 bg-white hover:bg-slate-100 transition-all cursor-pointer rounded-xl border border-slate-200 dark:bg-black/10 dark:border-slate-800 space-y-1">
-                  <span className="font-extrabold block text-[10px] text-coct-magenta">
+                  <span className="font-extrabold block text-[1em] text-coct-magenta">
                     🗣️ Interactive Screen narrative
                   </span>
-                  <p className="text-[10px] leading-relaxed text-slate-500 font-semibold">
+                  <p className="text-[1em] leading-relaxed text-slate-500 font-semibold">
                     Hover over any job post description or timeline milestones
                     below. Our synthesized City Guide voice will speak the text
                     out loud automatically.
@@ -400,7 +412,7 @@ export default function AccessibilityBar({
                         "This test vocal check confirms the City of Cape Town screen narrative features are active.",
                       )
                     }
-                    className="mt-1 text-[9px] font-bold text-white bg-coct-magenta hover:bg-coct-magenta/90 px-2 py-1 rounded-md inline-flex items-center gap-1"
+                    className="mt-1 text-[0.9em] font-bold text-white bg-coct-magenta hover:bg-coct-magenta/90 px-2 py-1 rounded-md inline-flex items-center gap-1"
                   >
                     <Play size={10} /> {t("a11y.speech_test")}
                   </button>
@@ -408,12 +420,12 @@ export default function AccessibilityBar({
               </div>
 
               {/* General Policy Info */}
-              <div className="space-y-2  text-white bg-coct-navy p-4 rounded-2xl border">
-                <span className="inline-flex items-center gap-1.5 font-bold uppercase text-[10px] text-black dark:text-white">
-                  <HelpCircle size={14} className="text-white shrink-0" />
+              <div className="space-y-2  text-white bg-coct-yellow p-4 rounded-2xl border">
+                <span className="inline-flex items-center gap-1.5 font-bold uppercase text-[1em] text-black dark:text-white">
+                  <HelpCircle size={14} className="text- shrink-0" />
                   {t("a11y.idp_notice")}
                 </span>
-                <p className="text-[10.5px] text-indigo-900/80 dark:text-slate-400 font-semibold leading-relaxed">
+                <p className="text-[1.05em] text-black dark:text-black font-semibold leading-relaxed">
                   In compliance with the Cape Town{" "}
                   <strong>Integrated Development Plan (2022-2027)</strong>,
                   visual, physical, and sensory assistance services are
@@ -422,9 +434,9 @@ export default function AccessibilityBar({
                   <strong>South African Rands (R)</strong>, ensuring equitable
                   opportunity and fair pay indexes for our diverse community.
                 </p>
-                <div className="pt-2 flex justify-between items-center text-[9px] font-extrabold font-mono text-slate-400 uppercase">
+                <div className="pt-2 flex justify-between items-center text-[1em] font-extrabold font-mono text-white uppercase">
                   <span>CT-IDP SECTION VII</span>
-                  <span className="text-coct-lime">ACTIVE DEPLOYMENT</span>
+                  <span className="text-coct-magenta">ACTIVE DEPLOYMENT</span>
                 </div>
               </div>
             </div>

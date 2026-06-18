@@ -25,6 +25,8 @@ import {
   Inbox,
   ArrowLeft,
   ArrowUpRight,
+  Eye,
+  X,
 } from "lucide-react";
 import {
   Job,
@@ -88,6 +90,7 @@ export default function AdminDashboard({
 
   const [citizenQuery, setCitizenQuery] = useState("");
   const [selectedCitizen, setSelectedCitizen] = useState<Citizen | null>(null);
+  const [showCvView, setShowCvView] = useState(false);
 
   const [appStatusFilter, setAppStatusFilter] = useState<
     | "All"
@@ -112,6 +115,24 @@ export default function AdminDashboard({
   const [placeReporting, setPlaceReporting] = useState("");
   const [placeLocation, setPlaceLocation] = useState("");
   const [placeMessage, setPlaceMessage] = useState("");
+
+  // Document preview for admin (reads from citizen's localStorage store)
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; mime: string; name: string } | null>(null);
+
+  const openAdminDocPreview = (citizenIdNumber: string, docType: string, label: string) => {
+    try {
+      const stored = JSON.parse(
+        localStorage.getItem(`cp_docpreview_${citizenIdNumber}_${docType}`) || "null",
+      );
+      if (stored?.dataUrl) {
+        setPreviewDoc({ url: stored.dataUrl, mime: stored.mimeType || "", name: stored.fileName || label });
+      } else {
+        alert(t("admin.no_doc_available"));
+      }
+    } catch {
+      alert(t("admin.no_doc_available"));
+    }
+  };
 
   // Reset Job form
   const resetJobForm = () => {
@@ -459,7 +480,7 @@ export default function AdminDashboard({
             <button
               id="admin-logout-btn"
               onClick={onLogout}
-              className="flex items-center space-x-1.5 px-4.5 py-2.5 border border-slate-700 hover:bg-slate-800 rounded-xl text-xs font-bold transition-all cursor-pointer"
+              className="flex items-center space-x-1.5 px-4.5 py-2.5 border border-white-700  bg-[#ef4444] rounded-xl text-xs font-bold transition-all cursor-pointer"
             >
               <LogOut size={14} />
               <span>{t("admin.logout")}</span>
@@ -623,7 +644,7 @@ export default function AdminDashboard({
                     resetJobForm();
                     setShowJobForm(true);
                   }}
-                  className="flex items-center space-x-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
+                  className="flex items-center space-x-1.5 bg-green-600 hover:bg-green-500 text-white font-bold text-xs uppercase tracking-wider px-5 py-3 rounded-xl transition-all shadow-md hover:shadow-lg cursor-pointer"
                 >
                   <Plus size={16} />
                   <span>{t("admin.add_job")}</span>
@@ -850,9 +871,7 @@ export default function AdminDashboard({
                         type="submit"
                         className="px-6 py-2 bg-blue-600 text-white hover:bg-blue-700 rounded-xl text-sm font-semibold shadow-md transition-all cursor-pointer"
                       >
-                        {editingJobId
-                          ? t("action.save")
-                          : t("admin.add_job")}
+                        {editingJobId ? t("action.save") : t("admin.add_job")}
                       </button>
                     </div>
                   </form>
@@ -1128,15 +1147,25 @@ export default function AdminDashboard({
                           </p>
                         </div>
                       </div>
-                      <button
-                        onClick={() => setSelectedCitizen(null)}
-                        className="text-slate-450 hover:text-white bg-slate-800 px-3 py-1.5 rounded-lg text-xs"
-                      >
-                        Dismiss
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setShowCvView((v) => !v)}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${showCvView ? "bg-indigo-600 text-white" : "bg-slate-700 text-slate-200 hover:bg-slate-600"}`}
+                        >
+                          <FileText size={13} />
+                          {showCvView ? "Hide CV" : "View CV"}
+                        </button>
+                        <button
+                          onClick={() => { setSelectedCitizen(null); setShowCvView(false); }}
+                          className="text-slate-450 hover:text-white bg-slate-800 px-3 py-1.5 rounded-lg text-xs"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
                     </div>
 
-                    <div className="p-6 space-y-6">
+                    <div className="p-6 space-y-6 max-h-[75vh] overflow-y-auto">
+                      {/* Personal Information */}
                       <div className="grid grid-cols-2 gap-4 text-xs">
                         <div>
                           <p className="text-slate-400 uppercase font-semibold tracking-wider">
@@ -1170,8 +1199,57 @@ export default function AdminDashboard({
                             {selectedCitizen.registeredDate}
                           </p>
                         </div>
+                        <div>
+                          <p className="text-slate-400 uppercase font-semibold tracking-wider">
+                            Highest Education
+                          </p>
+                          <p className="text-slate-850 font-bold mt-0.5">
+                            {selectedCitizen.education || "Not specified"}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-slate-400 uppercase font-semibold tracking-wider">
+                            Occupation
+                          </p>
+                          <p className="text-slate-850 font-bold mt-0.5">
+                            {selectedCitizen.occupation || "Not specified"}
+                          </p>
+                        </div>
+                        <div className="col-span-2">
+                          <p className="text-slate-400 uppercase font-semibold tracking-wider">
+                            Residential Address
+                          </p>
+                          <p className="text-slate-850 font-bold mt-0.5">
+                            {selectedCitizen.address || "Not provided"}
+                          </p>
+                        </div>
                       </div>
 
+                      {/* Submitted Documents */}
+                      <div className="border-t border-slate-100 pt-5 text-xs">
+                        <p className="text-slate-400 uppercase font-semibold tracking-wider mb-3">
+                          Profile Documents
+                        </p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { label: "Proof of Address", submitted: selectedCitizen.proofOfAddressUploaded ?? false },
+                          ].map(({ label, submitted }) => (
+                            <div
+                              key={label}
+                              className={`flex items-center justify-between p-2.5 rounded-lg border ${submitted ? "bg-emerald-50 border-emerald-200" : "bg-slate-50 border-slate-200"}`}
+                            >
+                              <span className={`font-semibold ${submitted ? "text-emerald-800" : "text-slate-500"}`}>
+                                {label}
+                              </span>
+                              <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${submitted ? "bg-emerald-100 text-emerald-700" : "bg-slate-200 text-slate-500"}`}>
+                                {submitted ? "Uploaded" : "Not uploaded"}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Skills */}
                       <div className="border-t border-slate-100 pt-5 text-xs">
                         <p className="text-slate-400 uppercase font-semibold tracking-wider mb-2">
                           Capabilities & Skill Accents
@@ -1196,6 +1274,140 @@ export default function AdminDashboard({
                         </div>
                       </div>
 
+                      {/* Work Experience */}
+                      {selectedCitizen.workExperience && selectedCitizen.workExperience.length > 0 && (
+                        <div className="border-t border-slate-100 pt-5 text-xs">
+                          <p className="text-slate-400 uppercase font-semibold tracking-wider mb-3 flex items-center gap-1.5">
+                            Work Experience
+                          </p>
+                          <div className="space-y-3">
+                            {selectedCitizen.workExperience.map((exp, idx) => (
+                              <div key={idx} className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
+                                <div className="flex justify-between items-start gap-2">
+                                  <div>
+                                    <p className="font-bold text-slate-900">{exp.jobTitle}</p>
+                                    <p className="text-slate-500 font-semibold mt-0.5">{exp.employer}</p>
+                                  </div>
+                                  <span className="shrink-0 text-[10px] font-mono text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                    {exp.startDate} – {exp.endDate}
+                                  </span>
+                                </div>
+                                {exp.description && (
+                                  <p className="text-slate-600 mt-2 leading-relaxed">{exp.description}</p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* CV Preview Panel */}
+                      <AnimatePresence>
+                        {showCvView && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            exit={{ opacity: 0, height: 0 }}
+                            className="border-t border-indigo-100 pt-5 overflow-hidden"
+                          >
+                            <p className="text-slate-400 uppercase font-bold tracking-wider text-xs mb-4 flex items-center gap-1.5">
+                              <FileText size={13} className="text-indigo-500" />
+                              Curriculum Vitae Preview
+                            </p>
+
+                            <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm text-xs">
+                              {/* CV Header */}
+                              <div className="bg-slate-900 text-white px-6 py-5">
+                                <h2 className="text-lg font-black tracking-tight">{selectedCitizen.fullName}</h2>
+                                {selectedCitizen.occupation && (
+                                  <p className="text-indigo-300 font-semibold mt-0.5">{selectedCitizen.occupation}</p>
+                                )}
+                                <div className="flex flex-wrap gap-4 mt-3 text-slate-300 font-medium text-[11px]">
+                                  {selectedCitizen.phone && (
+                                    <span>📞 {selectedCitizen.phone}</span>
+                                  )}
+                                  {selectedCitizen.email && (
+                                    <span>✉ {selectedCitizen.email}</span>
+                                  )}
+                                  {selectedCitizen.address && (
+                                    <span>📍 {selectedCitizen.address}</span>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="p-5 space-y-5">
+                                {/* Education */}
+                                <div>
+                                  <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-1 mb-2">
+                                    Education
+                                  </h3>
+                                  <p className="text-slate-800 font-semibold">
+                                    {selectedCitizen.education || "Not specified"}
+                                  </p>
+                                </div>
+
+                                {/* Skills */}
+                                <div>
+                                  <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-1 mb-2">
+                                    Skills & Competencies
+                                  </h3>
+                                  {selectedCitizen.skills && selectedCitizen.skills.length > 0 ? (
+                                    <div className="flex flex-wrap gap-1.5">
+                                      {selectedCitizen.skills.map((skill) => (
+                                        <span
+                                          key={skill}
+                                          className="bg-indigo-50 text-indigo-800 border border-indigo-100 px-2.5 py-0.5 rounded-md font-semibold"
+                                        >
+                                          {skill}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-slate-400 italic">No skills listed.</p>
+                                  )}
+                                </div>
+
+                                {/* Work Experience */}
+                                <div>
+                                  <h3 className="text-[10px] font-black uppercase tracking-widest text-indigo-600 border-b border-indigo-100 pb-1 mb-2">
+                                    Work Experience
+                                  </h3>
+                                  {selectedCitizen.workExperience && selectedCitizen.workExperience.length > 0 ? (
+                                    <div className="space-y-3">
+                                      {selectedCitizen.workExperience.map((exp, idx) => (
+                                        <div key={idx} className="pl-3 border-l-2 border-indigo-200">
+                                          <div className="flex justify-between items-start gap-2">
+                                            <div>
+                                              <p className="font-black text-slate-900">{exp.jobTitle}</p>
+                                              <p className="text-slate-600 font-semibold">{exp.employer}</p>
+                                            </div>
+                                            <span className="shrink-0 font-mono text-[10px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded">
+                                              {exp.startDate} – {exp.endDate}
+                                            </span>
+                                          </div>
+                                          {exp.description && (
+                                            <p className="text-slate-600 mt-1.5 leading-relaxed">{exp.description}</p>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-slate-400 italic">No work experience recorded.</p>
+                                  )}
+                                </div>
+
+                                {/* ID Number */}
+                                <div className="pt-2 border-t border-slate-100 flex justify-between items-center text-[10px] text-slate-400 font-mono">
+                                  <span>National ID: {selectedCitizen.idNumber}</span>
+                                  <span>Registered: {selectedCitizen.registeredDate}</span>
+                                </div>
+                              </div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+
+                      {/* Applications + per-application documents */}
                       <div className="border-t border-slate-100 pt-5">
                         <h4 className="text-sm font-bold text-slate-900 mb-3 flex items-center">
                           <Inbox size={15} className="mr-1.5 text-blue-500" />
@@ -1221,36 +1433,78 @@ export default function AdminDashboard({
                                 const job = allJobs.find(
                                   (j) => j.id === app.jobId,
                                 );
+                                const docEntries: { label: string; ok: boolean }[] = [
+                                  { label: "ID Copy", ok: app.documents.idCopy },
+                                  { label: "CV", ok: app.documents.cv },
+                                  { label: "Qualifications", ok: app.documents.qualifications },
+                                  ...(app.documents.proofOfAddress !== undefined
+                                    ? [{ label: "Proof of Address", ok: app.documents.proofOfAddress! }]
+                                    : []),
+                                ];
                                 return (
                                   <div
                                     key={app.id}
-                                    className="bg-slate-50 p-3 rounded-xl border border-slate-200 flex justify-between items-center text-xs"
+                                    className="bg-slate-50 p-3 rounded-xl border border-slate-200 text-xs space-y-2"
                                   >
-                                    <div>
-                                      <p className="font-bold text-slate-850">
-                                        {job?.title || "Unknown Vacancy"}
-                                      </p>
-                                      <p className="text-slate-450 text-[11px] font-semibold mt-0.5">
-                                        {job?.department}
-                                      </p>
+                                    <div className="flex justify-between items-center">
+                                      <div>
+                                        <p className="font-bold text-slate-850">
+                                          {job?.title || "Unknown Vacancy"}
+                                        </p>
+                                        <p className="text-slate-450 text-[11px] font-semibold mt-0.5">
+                                          {job?.department}
+                                        </p>
+                                      </div>
+                                      <span
+                                        className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
+                                          app.status === "placed"
+                                            ? "bg-emerald-100 text-emerald-800"
+                                            : app.status === "interview_scheduled"
+                                              ? "bg-blue-100 text-blue-800"
+                                              : app.status === "action_required"
+                                                ? "bg-amber-100 text-amber-800 font-bold"
+                                                : app.status === "rejected"
+                                                  ? "bg-red-100 text-red-800"
+                                                  : "bg-slate-200 text-slate-700"
+                                        }`}
+                                      >
+                                        {app.status === "interview_scheduled"
+                                          ? "Interview Set"
+                                          : app.status}
+                                      </span>
                                     </div>
-                                    <span
-                                      className={`px-2 py-0.5 rounded text-[11px] font-bold uppercase ${
-                                        app.status === "placed"
-                                          ? "bg-emerald-100 text-emerald-800"
-                                          : app.status === "interview_scheduled"
-                                            ? "bg-blue-100 text-blue-800"
-                                            : app.status === "action_required"
-                                              ? "bg-amber-100 text-amber-800 font-bold"
-                                              : app.status === "rejected"
-                                                ? "bg-red-100 text-red-800"
-                                                : "bg-slate-200 text-slate-700"
-                                      }`}
-                                    >
-                                      {app.status === "interview_scheduled"
-                                        ? "Interview Set"
-                                        : app.status}
-                                    </span>
+                                    {/* Document checklist for this application */}
+                                    <div className="flex flex-wrap gap-1.5 pt-1 border-t border-slate-200">
+                                      {docEntries.map(({ label, ok }) => {
+                                        const docTypeMap: Record<string, string> = {
+                                          "ID Copy": "id", "CV": "cv",
+                                          "Qualifications": "qualifications", "Proof of Address": "address",
+                                        };
+                                        const docType = docTypeMap[label] || label.toLowerCase();
+                                        return (
+                                        <div key={label} className="flex items-center gap-1">
+                                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${ok ? "bg-emerald-100 text-emerald-800" : "bg-red-50 text-red-600 border border-red-200"}`}>
+                                            {ok ? "✓" : "✗"} {label}
+                                          </span>
+                                          {ok && (
+                                            <button
+                                              type="button"
+                                              onClick={() => openAdminDocPreview(app.citizenIdNumber, docType, label)}
+                                              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 text-[9px] font-bold text-blue-600 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition-all"
+                                            >
+                                              <Eye size={9} /> {t("docs.view_doc")}
+                                            </button>
+                                          )}
+                                        </div>
+                                        );
+                                      })}
+                                    </div>
+                                    {app.interviewerNotes && (
+                                      <p className="text-[11px] text-slate-600 bg-white border border-slate-200 rounded p-2 mt-1">
+                                        <span className="font-bold text-slate-500 uppercase tracking-wide">Notes: </span>
+                                        {app.interviewerNotes}
+                                      </p>
+                                    )}
                                   </div>
                                 );
                               })
@@ -1418,7 +1672,7 @@ export default function AdminDashboard({
                               : "border-slate-200 hover:bg-slate-50 text-slate-700"
                           }`}
                         >
-                          Mark Reviewing
+                          {t("admin.mark_reviewing")}
                         </button>
 
                         <button
@@ -1435,7 +1689,7 @@ export default function AdminDashboard({
                               : "border-slate-200 hover:bg-slate-50 text-slate-700"
                           }`}
                         >
-                          Alert Documents
+                          {t("admin.alert_documents")}
                         </button>
                       </div>
                     </div>
@@ -1469,65 +1723,38 @@ export default function AdminDashboard({
                     {/* Document Uploads Review */}
                     <div className="mt-6 space-y-3">
                       <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest">
-                        Document Upload Clearance
+                        {t("admin.doc_review_title")}
                       </h4>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-xs">
-                        <div
-                          className={`p-3 rounded-xl border flex items-center justify-between font-semibold ${
-                            selectedApp.documents.idCopy
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-100"
-                              : "bg-red-50 text-red-800 border-red-100"
-                          }`}
-                        >
-                          <span>National ID Copy</span>
-                          {selectedApp.documents.idCopy ? (
-                            <Check size={14} />
-                          ) : (
-                            <AlertCircle size={14} />
-                          )}
-                        </div>
-                        <div
-                          className={`p-3 rounded-xl border flex items-center justify-between font-semibold ${
-                            selectedApp.documents.cv
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-100"
-                              : "bg-red-50 text-red-800 border-red-100"
-                          }`}
-                        >
-                          <span>Curriculum Vitae</span>
-                          {selectedApp.documents.cv ? (
-                            <Check size={14} />
-                          ) : (
-                            <AlertCircle size={14} />
-                          )}
-                        </div>
-                        <div
-                          className={`p-3 rounded-xl border flex items-center justify-between font-semibold ${
-                            selectedApp.documents.qualifications
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-100"
-                              : "bg-red-50 text-red-800 border-red-100"
-                          }`}
-                        >
-                          <span>Qualifications Check</span>
-                          {selectedApp.documents.qualifications ? (
-                            <Check size={14} />
-                          ) : (
-                            <AlertCircle size={14} />
-                          )}
-                        </div>
-                        <div
-                          className={`p-3 rounded-xl border flex items-center justify-between font-semibold ${
-                            selectedApp.documents.proofOfAddress
-                              ? "bg-emerald-50 text-emerald-800 border-emerald-100"
-                              : "bg-red-50 text-red-800 border-red-100"
-                          }`}
-                        >
-                          <span>Address Clearance</span>
-                          {selectedApp.documents.proofOfAddress ? (
-                            <Check size={14} />
-                          ) : (
-                            <AlertCircle size={14} />
-                          )}
-                        </div>
+                        {[
+                          { key: "id", label: t("admin.national_id_copy"), ok: selectedApp.documents.idCopy, docType: "id" },
+                          { key: "cv", label: t("admin.curriculum_vitae"), ok: selectedApp.documents.cv, docType: "cv" },
+                          { key: "quals", label: t("admin.qualifications_check"), ok: selectedApp.documents.qualifications, docType: "qualifications" },
+                          { key: "addr", label: t("admin.address_clearance"), ok: !!selectedApp.documents.proofOfAddress, docType: "address" },
+                        ].map(({ key, label, ok, docType }) => (
+                          <div
+                            key={key}
+                            className={`p-3 rounded-xl border flex flex-col gap-2 font-semibold ${
+                              ok
+                                ? "bg-emerald-50 text-emerald-800 border-emerald-100"
+                                : "bg-red-50 text-red-800 border-red-100"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="leading-tight">{label}</span>
+                              {ok ? <Check size={14} /> : <AlertCircle size={14} />}
+                            </div>
+                            {ok && (
+                              <button
+                                type="button"
+                                onClick={() => openAdminDocPreview(selectedApp.citizenIdNumber, docType, label)}
+                                className="flex items-center gap-1 text-[10px] font-bold text-blue-600 bg-white hover:bg-blue-50 px-2 py-0.5 rounded border border-blue-200 transition-all self-start"
+                              >
+                                <Eye size={10} /> {t("admin.view_doc")}
+                              </button>
+                            )}
+                          </div>
+                        ))}
                       </div>
                     </div>
 
@@ -1930,16 +2157,69 @@ export default function AdminDashboard({
         )}
       </main>
 
-      {/* Footer */}
-      <footer className="bg-slate-900 border-t border-slate-850 text-slate-400 py-6 text-center text-xs mt-12">
-        <p>
-          &copy; 2026 Department of Public Enterprise &amp; Citizen
-          Infrastructure Clearinghouse.
-        </p>
-        <p className="mt-1 text-[10px] text-slate-600">
-          Administrative Sandbox &bull; All changes saved client side.
-        </p>
-      </footer>
+      {/* ==================== DOCUMENT PREVIEW MODAL ==================== */}
+      <AnimatePresence>
+        {previewDoc && (
+          <motion.div
+            key="admin-doc-preview"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[60] p-4"
+            onClick={() => setPreviewDoc(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              transition={{ duration: 0.18 }}
+              className="bg-white rounded-2xl overflow-hidden shadow-2xl w-full max-w-4xl flex flex-col"
+              style={{ maxHeight: "92vh" }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between px-5 py-3.5 border-b border-slate-200 bg-slate-50 shrink-0">
+                <div className="flex items-center gap-2">
+                  <Eye size={16} className="text-indigo-600" />
+                  <span className="font-bold text-slate-800 text-sm">{t("docs.preview_title")}</span>
+                  <span className="font-mono text-xs text-slate-500 truncate max-w-64">{previewDoc.name}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="p-1.5 rounded-lg hover:bg-slate-200 text-slate-500 hover:text-slate-800 transition-all"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+              <div className="flex-1 overflow-auto bg-slate-100 flex items-center justify-center min-h-64">
+                {previewDoc.mime.startsWith("image/") ? (
+                  <img
+                    src={previewDoc.url}
+                    alt={previewDoc.name}
+                    className="max-w-full max-h-[78vh] object-contain shadow-md"
+                  />
+                ) : (
+                  <iframe
+                    src={previewDoc.url}
+                    title={previewDoc.name}
+                    className="w-full"
+                    style={{ height: "78vh" }}
+                  />
+                )}
+              </div>
+              <div className="shrink-0 flex justify-end px-5 py-3 border-t border-slate-200 bg-slate-50">
+                <button
+                  type="button"
+                  onClick={() => setPreviewDoc(null)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-sm rounded-xl transition-all"
+                >
+                  {t("docs.close_preview")}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
