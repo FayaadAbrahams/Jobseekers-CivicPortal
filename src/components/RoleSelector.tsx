@@ -407,7 +407,7 @@ export default function RoleSelector({
       </AnimatePresence>
 
       {/* Main card */}
-      <div className="mt-2 sm:mx-auto sm:w-full sm:max-w-xl">
+      <div className="mt-3 sm:mx-auto sm:w-full sm:max-w-xl">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
@@ -957,24 +957,25 @@ export default function RoleSelector({
                   onSubmit={handleForgotIdCheck}
                   className="space-y-4"
                 >
-                  <div className="flex items-center gap-2 pb-2 mb-2 border-b border-slate-100 font-bold">
+                  {/* Step header */}
+                  <div className="flex items-center gap-2 pb-3 mb-1 border-b border-slate-100">
                     <button
                       type="button"
-                      onClick={() => {
-                        setSubMode("login");
-                        setLoginError("");
-                      }}
-                      className="text-slate-400 hover:text-slate-700 p-1"
+                      onClick={() => { setSubMode("login"); setLoginError(""); }}
+                      className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                      title={t("action.back")}
                     >
                       <ArrowLeft size={16} />
                     </button>
-                    <div>
-                      <h3 className="text-sm font-black text-slate-800">
-                        Password Recovery Wizard
-                      </h3>
-                      <p className="text-[11px] text-slate-400">
-                        Step 1: Locate your national index file.
-                      </p>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-black text-slate-800">{t("auth.recovery_title")}</h3>
+                      <p className="text-[11px] text-slate-400">Step 1 of 3 — Locate your account</p>
+                    </div>
+                    {/* Step dots */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="h-2 w-6 rounded-full bg-coct-blue" />
+                      <span className="h-2 w-2 rounded-full bg-slate-200" />
+                      <span className="h-2 w-2 rounded-full bg-slate-200" />
                     </div>
                   </div>
 
@@ -986,7 +987,7 @@ export default function RoleSelector({
 
                   <div>
                     <label className="block text-xs font-extrabold text-slate-600 uppercase tracking-widest mb-1.5">
-                      Verify Your National ID Number
+                      {t("auth.recovery_id_label")}
                     </label>
                     <div className="relative rounded-xl shadow-xs">
                       <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
@@ -1007,27 +1008,29 @@ export default function RoleSelector({
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className={`w-full flex items-center justify-center py-3.5 px-4 rounded-full text-sm font-bold transition-all cursor-pointer uppercase tracking-wider ${
-                      isHigh
-                        ? "bg-coct-yellow text-black hover:bg-white border-2 border-white"
-                        : "text-white bg-coct-blue hover:bg-coct-blue/90 shadow-md shadow-coct-blue/15"
-                    }`}
-                  >
-                    Lookup Register &rarr;
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSubMode("login");
-                      setLoginError("");
-                    }}
-                    className="w-full text-center text-xs text-slate-400 font-bold hover:underline"
-                  >
-                    Cancel Verification
-                  </button>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => { setSubMode("login"); setLoginError(""); }}
+                      className={`flex-1 py-3 px-4 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                        isHigh
+                          ? "border-slate-600 text-slate-300 hover:bg-slate-800"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {t("action.back")}
+                    </button>
+                    <button
+                      type="submit"
+                      className={`flex-1 flex items-center justify-center py-3 px-4 rounded-full text-sm font-bold transition-all cursor-pointer uppercase tracking-wider ${
+                        isHigh
+                          ? "bg-coct-yellow text-black hover:bg-white border-2 border-white"
+                          : "text-white bg-coct-blue hover:bg-coct-blue/90 shadow-md shadow-coct-blue/15"
+                      }`}
+                    >
+                      {t("auth.recovery_find_btn")} →
+                    </button>
+                  </div>
                 </motion.form>
               )}
 
@@ -1041,18 +1044,36 @@ export default function RoleSelector({
                   onSubmit={handleSecurityCheck}
                   className="space-y-4"
                 >
-                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                    <div>
-                      <span className="text-[10px] bg-indigo-100 text-indigo-800 font-black px-2 py-0.5 rounded-full uppercase">
-                        File Identified
-                      </span>
-                      <h3 className="text-sm font-black text-slate-800 mt-1">
-                        Hello, {recoveryCitizen.fullName}
-                      </h3>
-                      <p className="text-[10px] text-slate-400">
-                        Answer the security coordinates on record to unlock
-                        access.
-                      </p>
+                  {/* Step header */}
+                  <div className="flex items-center gap-2 pb-3 mb-1 border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubMode("forgot_id");
+                        setLoginError("");
+                        setAns1(""); setAns2(""); setAns3("");
+                        setFailedAttempts(0);
+                        setRecoveryCitizen(null);
+                        setRecoveryId("");
+                      }}
+                      className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                      title={t("action.back")}
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] bg-indigo-100 text-indigo-800 font-black px-2 py-0.5 rounded-full uppercase">
+                          {recoveryCitizen.fullName}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5">Step 2 of 3 — Security verification</p>
+                    </div>
+                    {/* Step dots */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="h-2 w-6 rounded-full bg-coct-blue" />
+                      <span className="h-2 w-2 rounded-full bg-slate-200" />
                     </div>
                   </div>
 
@@ -1065,7 +1086,7 @@ export default function RoleSelector({
                   <div className="space-y-3 pt-2 bg-slate-50 -mx-6 px-6 py-4">
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        1. Mother's maiden name?
+                        {t("auth.q1_label")}
                       </label>
                       <input
                         type="text"
@@ -1079,7 +1100,7 @@ export default function RoleSelector({
 
                     <div>
                       <label className="block text-xs font-bold text-slate-700 mb-1">
-                        2. Place of birth (city or town)?
+                        {t("auth.q2_label")}
                       </label>
                       <input
                         type="text"
@@ -1106,17 +1127,37 @@ export default function RoleSelector({
                     </div>
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center py-3 px-4 rounded-full text-xs font-black text-white bg-indigo-600 hover:bg-indigo-750 shadow-md transition-all cursor-pointer uppercase tracking-wider"
-                  >
-                    {t("auth.submit_answers")}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubMode("forgot_id");
+                        setLoginError("");
+                        setAns1(""); setAns2(""); setAns3("");
+                        setFailedAttempts(0);
+                        setRecoveryCitizen(null);
+                        setRecoveryId("");
+                      }}
+                      className={`flex-1 py-3 px-4 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                        isHigh
+                          ? "border-slate-600 text-slate-300 hover:bg-slate-800"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {t("action.back")}
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 flex items-center justify-center py-3 px-4 rounded-full text-xs font-black text-white bg-indigo-600 hover:bg-indigo-700 shadow-md transition-all cursor-pointer uppercase tracking-wider"
+                    >
+                      {t("auth.submit_answers")}
+                    </button>
+                  </div>
 
-                  <div className="text-center pt-1">
+                  <div className="text-center">
                     <span className="text-[10px] text-slate-400 font-semibold">
                       Security attempts:{" "}
-                      <strong className="text-rose-600">
+                      <strong className={failedAttempts > 0 ? "text-rose-600" : "text-slate-500"}>
                         {failedAttempts} / 3
                       </strong>
                     </span>
@@ -1134,16 +1175,41 @@ export default function RoleSelector({
                   onSubmit={handleResetPassword}
                   className="space-y-4"
                 >
-                  <div className="text-center py-2">
-                    <div className="mx-auto w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 mb-2">
-                      <LockKeyhole size={24} />
+                  {/* Step header */}
+                  <div className="flex items-center gap-2 pb-3 mb-1 border-b border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubMode("forgot_questions");
+                        setLoginError("");
+                        setNewPassword("");
+                        setAns1(""); setAns2(""); setAns3("");
+                      }}
+                      className="shrink-0 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-all"
+                      title={t("action.back")}
+                    >
+                      <ArrowLeft size={16} />
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm font-black text-slate-800">{t("auth.reset_password_title")}</h3>
+                      <p className="text-[11px] text-slate-400">Step 3 of 3 — Set new password</p>
                     </div>
-                    <h3 className="text-base font-black text-slate-900">
-                      Security Clearance Passed
-                    </h3>
-                    <p className="text-xs text-slate-400 mt-1">
-                      Specify a new secure portal password below.
-                    </p>
+                    {/* Step dots */}
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                      <span className="h-2 w-6 rounded-full bg-coct-blue" />
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center text-emerald-600 shrink-0">
+                      <LockKeyhole size={16} />
+                    </div>
+                    <div>
+                      <p className="text-xs font-black text-emerald-800">Security Clearance Passed</p>
+                      <p className="text-[10px] text-emerald-600">Specify a new secure portal password below.</p>
+                    </div>
                   </div>
 
                   <div>
@@ -1160,12 +1226,30 @@ export default function RoleSelector({
                     />
                   </div>
 
-                  <button
-                    type="submit"
-                    className="w-full flex items-center justify-center py-3 px-4 rounded-full text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 cursor-pointer"
-                  >
-                    {t("auth.reset_password_btn")}
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubMode("forgot_questions");
+                        setLoginError("");
+                        setNewPassword("");
+                        setAns1(""); setAns2(""); setAns3("");
+                      }}
+                      className={`flex-1 py-3 px-4 rounded-full text-xs font-bold border transition-all cursor-pointer ${
+                        isHigh
+                          ? "border-slate-600 text-slate-300 hover:bg-slate-800"
+                          : "border-slate-200 text-slate-600 hover:bg-slate-50"
+                      }`}
+                    >
+                      {t("action.back")}
+                    </button>
+                    <button
+                      type="submit"
+                      className="flex-1 flex items-center justify-center py-3 px-4 rounded-full text-xs font-extrabold text-white bg-emerald-600 hover:bg-emerald-700 shadow-lg shadow-emerald-100 cursor-pointer"
+                    >
+                      {t("auth.reset_password_btn")}
+                    </button>
+                  </div>
                 </motion.form>
               )}
 
