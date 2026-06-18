@@ -407,7 +407,7 @@ export default function RoleSelector({
       </AnimatePresence>
 
       {/* Main card */}
-      <div className="mt-3 sm:mx-auto sm:w-full sm:max-w-xl">
+      <div className="mt-1 sm:mx-auto sm:w-full sm:max-w-xl">
         <motion.div
           initial={{ opacity: 0, y: 15 }}
           animate={{ opacity: 1, y: 0 }}
