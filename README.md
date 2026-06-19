@@ -1,6 +1,6 @@
 # Civic Portal - Jobseekers
 
-> **1st Place** — City of Cape Town Hackathon 2026
+> **1st Place** | City of Cape Town Hackathon 2026
 
 A web-based portal built in a 48-hour hackathon sprint to address a pressing community challenge through an innovative digital solution. Built with **Vite**, **TypeScript**, **HTML**, and **CSS**.
 
@@ -67,16 +67,23 @@ npm run build
 npm run preview
 ```
 
+### Vercel Deployment 
+
+Scan the QR code to access the deployed version used for the presentation day. 
+<img width="282" height="274" alt="image" src="https://github.com/user-attachments/assets/4817d085-0447-44a8-89ad-f499eba2e7c2" />
+
+
 ## Project Structure
 
 ```
 .
 ├── public/             # Static assets
+├── dist/               # Required for deployment to vercel
 ├── src/
 │   ├── components/     # UI components
 │   ├── styles/         # CSS
 │   ├── main.ts          # App entry point
-│   └── ...
+│── CIVIC PORTAL JOBSEEKERS.pptx
 ├── index.html
 ├── package.json
 ├── tsconfig.json
@@ -94,7 +101,9 @@ npm run preview
 
 ## Presentation
 
-On the final day, the team presented the concept and working prototype to a panel of judges, covering both the technical execution and the broader social value of the application — resulting in a first-place finish overall!
+On the final day, the team presented the concept and working prototype to a panel of judges, covering both the technical execution and the broader social value of the application, resulting in a first-place finish!
+
+The aim is for the City of Cape Town Business Applications department to use our idea to implement an actual solution to the community. 
 
 ## License
 Free to use as it's intent is to solve an issue within the community, we aim to assist those who have less and to uplift the community.
