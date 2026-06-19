@@ -32,7 +32,6 @@ We conceptualized and built a functional web-based portal designed to balance us
 - **HTML5** — front-end structure
 - **CSS3** — styling and responsive layout
 
-> _[Add any additional libraries, APIs, or services used — e.g. mapping libraries, backend/API integrations, hosting]_
 
 ## Getting Started
 
